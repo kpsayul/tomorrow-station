@@ -22,6 +22,7 @@ const thirdNight=createThirdNight({state:()=>state,previousEntities:secondNight.
 const fourthDay=createFourthDay({state:()=>state,speak,toast,tone,save,objective,move,showEnding,rect,text,glow,person});
 const fifthStory=createFifthStory({state:()=>state,speak,toast,tone,save,objective,move,showEnding,rect,text,glow,person});
 const comfort=createGameComfort({state:()=>state,active:()=>active,readSave,normaliseSave,restore,saveSummary,formatSavedAt,currentTask,keys,canvas});
+const sharing=createGameSharing({state:()=>state,keys,canvas});
 function roomEntities(){return state.chapter===5?fifthStory.roomEntities(state.room):state.chapter===4?fourthDay.roomEntities(state.room):state.chapter===3?thirdNight.roomEntities(state.room):secondNight.roomEntities(state.room);}
 function move(room,x=240,y=230){state.room=room;state.x=x;state.y=y;keys.clear();objective();save();comfort.transition();tone(293,.7);}
 function stationTime(){return state.chapter===5?(state.night5.ended?'18:05':'17:00'):state.chapter===4?(state.day4.ended?'09:12':state.day4.lit?'08:40':'08:07'):state.chapter===3?(state.night3.ended?'06:12':state.night3.announced?'05:59':'00:10'):state.night2.ended?'00:09':state.ended?'00:08':'00:07';}
@@ -44,7 +45,7 @@ function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10].in
 }return null;}
 function readSave(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE)));}catch{return null;}}
 if(readSave())$('continue').hidden=false;
-function modalOpen(){return $('journal').open||$('save-menu').open||$('credits').open;}
+function modalOpen(){return $('journal').open||$('save-menu').open||$('credits').open||$('share-menu').open;}
 function running(){return runToggle||keys.has('shift');}
 function updateRunButton(){const button=$('run-toggle');button.setAttribute('aria-pressed',String(runToggle));button.firstChild.textContent=`달리기 ${runToggle?'ON':'OFF'} `;}
 $('run-toggle').onclick=()=>{runToggle=!runToggle;updateRunButton();canvas.focus({preventScroll:true});};
@@ -66,8 +67,9 @@ function storeSlot(index){
  $('save-status').textContent=`저장 ${index} 완료 · ${formatSavedAt(new Date())}`;$('save-menu').close();toast(`저장 ${index}에 지금까지의 여정을 담았습니다.`);tone(523,.25);
 }
 function restore(snapshot,label){
+ window.tomorrowMetrics?.track('game_resume',{chapter:snapshot.chapter});
  state=snapshot;active=true;keys.clear();$('start').hidden=true;$('ending').hidden=true;
- if($('journal').open)$('journal').close();if($('save-menu').open)$('save-menu').close();if($('credits').open)$('credits').close();
+ if($('journal').open)$('journal').close();if($('save-menu').open)$('save-menu').close();if($('credits').open)$('credits').close();if($('share-menu').open)$('share-menu').close();
  closeDialogue();objective();if(save()){$('save-status').textContent=`${label} 불러옴`;toast(`${label}에서 이어갑니다.`);}canvas.focus({preventScroll:true});
 }
 function renderSaveMenu(){
@@ -168,11 +170,11 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  case 'clock':speak('멈춘 시계',['시계는 12시 7분을 가리키고 있다.','고장 난 것 같지는 않다.\n누군가 한 문장을 끝내기를 기다리는 것 같다.']);break;
  }
 }
-function showEnding({eyebrow,title,body,next}){clearTimeout(toastTimer);$('toast').classList.remove('show');$('end-eyebrow').textContent=eyebrow;$('end-title').textContent=title;$('end-text').textContent=body;$('end-next-night').hidden=!next;$('end-next-night').textContent=nextChapterLabel();$('return').textContent=state.chapter===4?'마을에 조금 더 머무르기 →':state.room===5?'열차에 조금 더 머무르기 →':'역에 조금 더 머무르기 →';$('credits-button').hidden=!(state.chapter===5&&state.night5.ended);$('ending').hidden=false;}
+function showEnding({eyebrow,title,body,next}){window.tomorrowMetrics?.track('chapter_complete',{chapter:state.chapter});clearTimeout(toastTimer);$('toast').classList.remove('show');$('end-eyebrow').textContent=eyebrow;$('end-title').textContent=title;$('end-text').textContent=body;$('end-next-night').hidden=!next;$('end-next-night').textContent=nextChapterLabel();$('return').textContent=state.chapter===4?'마을에 조금 더 머무르기 →':state.room===5?'열차에 조금 더 머무르기 →':'역에 조금 더 머무르기 →';$('credits-button').hidden=!(state.chapter===5&&state.night5.ended);$('ending').hidden=false;}
 function finish(choice){state.choice=choice;speak('역무원 · 여울',choice==='carry'?['그럼… 오늘은 제가 먼저 가볼게요.','미안하다는 말은 너무 늦었을지 몰라도,\n보고 싶다는 말은 아직 할 수 있겠죠.','다음에 만나면 먼저 물어볼게요.\n배고프지 않냐고.']:['그래요. 이곳을 찾을 수 있게.','그렇다고 여기서만 기다리진 않을래요.\n내일은 바다에 가보려고요.','혹시 먼저 오면 전해주세요.\n이번엔 내가 자리를 맡아놓겠다고.'],()=>{state.ended=true;save();objective();showEnding({eyebrow:'END OF THE FIRST NIGHT',title:choice==='carry'?'기다림을 데리고':'돌아올 자리',body:choice==='carry'?'여울은 방울을 주머니에 넣었다.\n아주 오래 멈췄던 시계가 한 칸 움직였다.\n\n어떤 내일은, 우리가 먼저 찾아가야 온다.':'문 위에 작은 방울이 걸렸다.\n이제 누군가 돌아오면 소리가 날 것이다.\n\n기다리는 자리를 남겨두고, 걸어가도 괜찮다.',next:true});tone(523,2);});}
-function begin(resume){state=resume?(readSave()||fresh()):fresh();active=true;$('start').hidden=true;$('ending').hidden=true;closeDialogue();objective();canvas.focus({preventScroll:true});if(!resume)toast('방향키로 걷고, 가까이서 E를 눌러보세요.');}
+function begin(resume){state=resume?(readSave()||fresh()):fresh();active=true;$('start').hidden=true;$('ending').hidden=true;closeDialogue();objective();canvas.focus({preventScroll:true});window.tomorrowMetrics?.track(resume?'game_resume':'game_start',{chapter:state.chapter});if(!resume){window.tomorrowMetrics?.track('chapter_start',{chapter:1});toast('방향키로 걷고, 가까이서 E를 눌러보세요.');}}
 $('begin').onclick=()=>begin(false);$('continue').onclick=()=>begin(true);$('return').onclick=()=>{$('ending').hidden=true;canvas.focus({preventScroll:true});};$('restart').onclick=()=>{begin(false);save();};
-$('next-night').onclick=$('end-next-night').onclick=()=>{const next=nextChapter();if(!next)return;$('ending').hidden=true;closeDialogue();if(next===5)fifthStory.start();else if(next===4)fourthDay.start();else if(next===3)thirdNight.start();else secondNight.start();};
+$('next-night').onclick=$('end-next-night').onclick=()=>{const next=nextChapter();if(!next)return;$('ending').hidden=true;closeDialogue();if(next===5)fifthStory.start();else if(next===4)fourthDay.start();else if(next===3)thirdNight.start();else secondNight.start();window.tomorrowMetrics?.track('chapter_start',{chapter:state.chapter});};
 $('journal-button').onclick=()=>{keys.clear();$('journal-content').replaceChildren();let notes;
  if(state.chapter===5)notes=fifthStory.journal();else if(state.chapter===4)notes=fourthDay.journal();else if(state.chapter===3)notes=thirdNight.journal();else if(state.chapter===2)notes=secondNight.journal();else{notes=[!state.met?'나는 이름을 기억하지 못한다. 우선 역무원에게 말을 걸자.':'여울이라는 역무원이 잃어버린 방울을 찾아달라고 했다.'];if(state.ticket)notes.push('내일행 표 — 자판기가 준 따뜻한 표. 승강장 고양이에게 보여주자.');if(state.cat)notes.push('말하는 고양이 — 왼쪽 벤치 아래에 방울이 있다고 한다. 근무는 싫어한다.');if(state.bell)notes.push('작은 방울 — 누군가 함께 바다에 가자고 약속했던 기억.');if(state.ended)notes.push(state.choice==='carry'?'첫 번째 밤: 기다림을 데리고.':'첫 번째 밤: 돌아올 자리.');}
  comfort.showJournal(notes);};$('close-journal').onclick=()=>{$('journal').close();canvas.focus({preventScroll:true});};

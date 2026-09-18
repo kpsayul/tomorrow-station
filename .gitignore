@@ -5,6 +5,8 @@ test-results/
 playwright-report/
 *.log
 *.zip
+!media/tomorrow-station-itch.zip
+!media/tomorrow-station-promo.zip
 
 # Local configuration and credentials
 .env

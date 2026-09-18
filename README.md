@@ -18,6 +18,22 @@ HTML, CSS, JavaScript만 사용하는 정적 게임입니다. 공개 저장소�
 
 게임 저장은 접속한 주소의 브라우저 저장소에 남습니다. 로컬 주소(`localhost`)와 공개 사이트, 다른 기기·브라우저 사이에 자동 동기화되지는 않습니다. 저장 메뉴에서 **현재 진행 내보내기**로 JSON 파일을 내려받고, 옮길 곳에서 **불러오기 → 저장 파일 가져오기**로 선택하면 이어서 플레이할 수 있습니다.
 
+## 게임 소개와 공유
+
+공개 자료 페이지: https://kpsayul.github.io/tomorrow-station/promo/
+
+- `media/og-cover.png`: 링크 미리보기용 1200×630 대표 이미지
+- `media/itch-cover.png`: itch.io 표지용 630×500 이미지
+- `media/tomorrow-station-15s.mp4`: 실제 게임 장면과 대사를 담은 720×1280 세로 영상, 약 15초
+- `media/tomorrow-station-promo.zip`: 이미지·영상·복사할 소개 문구 묶음
+- `media/tomorrow-station-itch.zip`: 바로 업로드할 HTML 게임 묶음
+- `promo/POSTS.md`: SNS·게임 커뮤니티·itch.io 소개 초안
+- `promo/SETUP.md`: 통계 연결, itch.io 업로드, 자료 재생성 방법
+
+게임의 **친구에게 알려주기**, 엔딩의 **내 선택 공유하기**에서 스포일러를 줄인 카드 이미지를 저장하거나 플레이 링크를 복사할 수 있습니다. 첫 번째 이야기에서 한 선택에 따라 카드 문구가 달라집니다. 브라우저 공유 기능도 지원하며, 복사 권한이 없으면 직접 복사할 링크를 선택해 줍니다.
+
+**현재 실제 통계 수집은 꺼져 있습니다.** `analytics-config.js`에 소유자의 GA4 측정 ID를 넣고 배포해야 시작됩니다. 계정 없이 접속자 수를 임의로 표시하지 않습니다. 준비된 코드는 유입 경로, 게임 시작·이어 하기, 이야기별 시작·완료, 공유 버튼 이용을 기록하며 같은 탭 세션의 중복 완료는 줄입니다. 실제 공개 주소에서만 작동하고 개발·미리보기·itch.io 임베드에서는 꺼집니다. 통계 설정과 참여 거부는 `privacy.html`에서 확인할 수 있습니다. 외부 커뮤니티 게시와 itch.io 프로젝트 등록은 별도 계정에서 진행해야 합니다.
+
 ## 실행
 
 `index.html`을 브라우저에서 엽니다. 별도의 설치나 빌드가 필요 없습니다. 또는 이 폴더에서 `python -m http.server 8080`을 실행하고 http://localhost:8080 에 접속합니다.
@@ -79,6 +95,8 @@ HTML, CSS, JavaScript만 사용하는 정적 게임입니다. 공개 저장소�
 - `chapter-four.js`: 바닷가 이야기·빛길 퍼즐·재회·사진첩·03호의 답장
 - `chapter-five.js`: 첫 여정의 결말·백지의 휴가·손님 맞이·환승 퍼즐·당직실·옥상 정원
 - `game-ui.js`: 인물 초상화·장면 전환·대화 기록·지도·저장 파일 내보내기/가져오기·여정 회고
+- `share.js`: 플레이 링크 복사·모바일 공유·엔딩 결과 이미지 저장
+- `analytics.js` / `analytics-config.js`: 계정 연결 후 동작하는 유입·진행 이벤트
 - `style.css`: 게임 외부 화면, 대화 UI, 모바일 조작
 - `index.html`: 진입점
 
@@ -89,3 +107,5 @@ HTML, CSS, JavaScript만 사용하는 정적 게임입니다. 공개 저장소�
 Playwright와 Microsoft Edge가 있는 환경에서 로컬 서버를 실행한 뒤 `node smoke-test.cjs`, `node chapter-two-test.cjs`부터 `node chapter-five-test.cjs`, `node controls-save-test.cjs`, `node responsive-test.cjs`, `node polish-test.cjs`로 확인합니다. 기본 테스트 주소는 `http://localhost:8080/tomorrow-station/`이며, 폴더 자체에서 서버를 실행했다면 `GAME_URL=http://localhost:8080/`로 지정합니다.
 
 각 이야기의 분기·취소·퍼즐·이동 가능한 경로·기존 저장 호환성, 직접/자동 저장과 파일 이동·복구, 320px부터 큰 화면까지의 배치를 검증합니다. 테스트용 상태 접근 코드는 Playwright가 가로챈 응답에만 주입되며 게임 파일에는 포함되지 않습니다.
+
+`node growth-test.cjs`는 공개 도메인을 로컬 파일로 가로채고 Google 태그 응답을 테스트용으로 대체합니다. 실제 Google Analytics로 데이터를 보내지 않으면서 계정 연결 유무·전송 거부·스크립트 차단·중복 완료·공유 취소·복사 실패·카드 파일·영상 재생을 검증합니다. 실제 집계 수신 여부는 소유자 계정을 연결한 뒤 GA4 실시간 보고서에서 따로 확인해야 합니다.
