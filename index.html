@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111a29">
+  <title>내일 분실물 보관소</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header><a class="brand" href="./">NIGHT PLATFORM <span>작은 이야기 · 01</span></a><button id="sound" class="quiet" aria-pressed="false">소리 켜기 ♫</button></header>
+    <section class="heading"><div><p class="eyebrow">SOME THINGS WAIT FOR YOU.</p><h1>내일 분실물 보관소<span>THE LOST & FOUND OF TOMORROW</span></h1></div><p class="intro">마지막 열차가 떠나고,<br>두고 간 마음들이 깨어나는 시간.</p></section>
+    <div class="play-layout">
+    <div class="stage-column">
+    <section class="game-wrap" aria-label="내일 분실물 보관소 게임">
+      <div class="scene-stage" id="scene-stage">
+      <canvas id="game" width="960" height="576" tabindex="0" aria-label="방향키나 WASD로 이동하고 E 또는 Enter로 대화합니다."></canvas>
+      <div id="world-labels" class="world-labels" aria-hidden="true"></div>
+      <div id="target-marker" class="target-marker" hidden aria-hidden="true">◆</div>
+      <button id="interaction" class="interaction" hidden><kbd>E</kbd><span id="interaction-label"></span><small>Enter도 가능</small></button>
+      <div class="scene-label"><span class="dot"></span><span id="location">00:07 · 내일역 대합실</span></div>
+      <div id="objective" class="objective">작은 이야기가 당신을 기다립니다</div>
+      </div>
+      <div id="start" class="veil"><div class="start-card"><p class="eyebrow">A SHORT WALK AFTER MIDNIGHT</p><h2>잃어버린 건<br>물건뿐일까?</h2><p>이름을 잊은 당신에게<br>한밤의 역무원이 일을 부탁합니다.</p><button id="begin" class="primary">첫 번째 밤 시작하기 <span>→</span></button><button id="continue" class="quiet" hidden>이어 하기</button><small>세 개의 밤과 바닷가 이야기 · 탐색과 수수께끼 · 자동 저장</small></div></div>
+      <div id="dialogue" class="dialogue" hidden role="region" aria-label="대화"><div class="dialogue-head"><span id="speaker"></span><span id="page"></span></div><p id="line" aria-live="polite"></p><div id="choices"></div><button id="next" class="next">계속 <span>↵</span></button></div>
+      <div id="ending" class="veil" hidden><div class="start-card"><p id="end-eyebrow" class="eyebrow">END OF THE FIRST NIGHT</p><h2 id="end-title"></h2><p id="end-text"></p><button id="end-next-night" class="primary" hidden>두 번째 밤 시작 →</button><button id="return" class="primary">역에 조금 더 머무르기 →</button><button id="restart" class="quiet">처음부터 다시 걷기</button></div></div>
+      <div id="toast" role="status"></div>
+    </section>
+    </div>
+    <aside class="side-panel" aria-label="진행 안내와 조작">
+    <section id="guide" class="guide" hidden aria-label="현재 진행 안내" aria-live="polite"><span id="guide-step" class="guide-step">01 / 05</span><div><strong id="guide-title"></strong><p id="guide-detail"></p></div><button id="next-night" class="primary" hidden>두 번째 밤 시작 →</button></section>
+    <section class="game-toolbar" aria-label="게임 메뉴">
+      <div class="toolbar-actions"><button id="run-toggle" class="tool-button" aria-pressed="false">달리기 OFF <kbd>Shift</kbd></button><span class="toolbar-divider"></span><button id="save-button" class="tool-button" disabled>저장</button><button id="load-button" class="tool-button">불러오기</button></div>
+      <span id="save-status" class="save-status" role="status">세 곳에 따로 저장할 수 있어요</span>
+    </section>
+    <section class="below"><div class="controls"><span><kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd> 이동</span><span><kbd>Shift</kbd> 누르는 동안 달리기</span><span><kbd>E</kbd> / <kbd>Enter</kbd> 이야기 · 조사</span></div><button id="journal-button" class="quiet">주머니 속 메모 <span>↗</span></button></section>
+    <section class="mobile-controls" aria-label="터치 조작"><div class="dpad"><button data-dir="up" aria-label="위로">↑</button><button data-dir="left" aria-label="왼쪽으로">←</button><button data-dir="down" aria-label="아래로">↓</button><button data-dir="right" aria-label="오른쪽으로">→</button></div><button id="touch-action">말 걸기 / 계속</button></section>
+    </aside>
+    </div>
+    <footer><span id="chapter-label">01 / 기억이 머무는 역</span><span>서두르지 않아도 괜찮아요. 다음 열차는 아직 멀었으니까.</span></footer>
+  </main>
+  <dialog id="journal"><p class="eyebrow">NOTES IN YOUR POCKET</p><h2>주머니 속 메모</h2><div id="journal-content"></div><button id="close-journal" class="primary">다시 걷기</button></dialog>
+  <dialog id="save-menu" aria-labelledby="save-menu-title"><p class="eyebrow">A PLACE TO RETURN TO</p><h2 id="save-menu-title">이 순간 저장하기</h2><p id="save-menu-description" class="menu-description"></p><div id="save-slots"></div><p class="save-note">저장은 이 브라우저에 남아요. 대화 중이라면 완료한 진행까지 기록되고, 읽던 대화는 다시 시작할 수 있어요.</p><button id="close-save-menu" class="quiet">닫기 · Esc</button></dialog>
+  <script src="chapter-two.js"></script>
+  <script src="chapter-three.js"></script>
+  <script src="chapter-four.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

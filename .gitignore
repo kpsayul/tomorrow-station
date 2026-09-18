@@ -1,0 +1,14 @@
+# Local development and generated screenshots
+node_modules/
+screenshot-*.png
+test-results/
+playwright-report/
+*.log
+*.zip
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
