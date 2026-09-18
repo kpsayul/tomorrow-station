@@ -72,6 +72,11 @@ h1 span { display: block; font: 9px 'Noto Sans KR', sans-serif; letter-spacing: 
 #ending .quiet { display: block; margin-top: 8px; }
 .dialogue { position: absolute; z-index: 4; bottom: 18px; left: 3%; width: 94%; max-height: calc(100% - 76px); overflow-y: auto; overscroll-behavior: contain; background: #111e2b; border: 1px solid #9bb4a4; border-radius: 4px; padding: clamp(14px, 1.7vw, 24px); box-shadow: 0 0 0 5px #101a2650; }
 .dialogue-head { display: flex; justify-content: space-between; gap: 15px; color: #e0eabf; font-size: 15px; }
+#portrait { width: 40px; height: 40px; image-rendering: pixelated; flex-shrink: 0; border: 1px solid #829e8a; border-radius: 3px; }
+.dialogue-head { align-items: center; gap: 10px; }
+#speaker { flex: 1; }
+.dialogue-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#previous { min-height: 44px; padding-left: 0; font-size: 12px; }
 #page { font-size: 12px; color: #bbccc8; white-space: nowrap; }
 #line { font-size: clamp(16px, 1.3vw, 20px); line-height: 1.85; color: #f0f3e9; white-space: pre-line; overflow-wrap: anywhere; margin: 12px 0 8px; }
 .next { display: block; margin-left: auto; background: transparent; color: #d1e0c6; font-size: 14px; padding: 8px; min-height: 40px; }
@@ -128,6 +133,23 @@ dialog h2 { font-family: 'Noto Serif KR', serif; font-size: clamp(21px, 2vw, 28p
 .slot-action { flex-shrink: 0; padding: 10px 12px; min-height: 44px; border-radius: 4px; background: #bad1a9; color: #26372d; font-size: 12px; }
 .slot-action:hover:not(:disabled) { background: #d3e8c3; }
 #close-save-menu { display: block; margin: 12px 0 0 auto; }
+.notebook-nav, .transfer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.notebook-nav { margin: 16px 0; }
+.notebook-nav button { background: #263d47; border: 1px solid #78998a66; border-radius: 4px; min-height: 44px; padding: 8px 14px; }
+.notebook-nav button[aria-pressed=true] { background: var(--mint); color: #24352f; }
+.map-connection { display: flex; align-items: center; gap: 9px; margin: 10px 0; }
+.map-place { flex: 1; min-width: 0; text-align: center; background: #102631; border: 1px solid #708a8066; border-radius: 4px; padding: 10px 6px; font-size: 13px; }
+.map-place.current { background: #3a514a; border-color: var(--mint); color: #eff5d8; }
+.map-description { font-size: 12px; }
+.history-entry { padding: 12px 0; border-bottom: 1px solid #ffffff12; }
+.history-entry strong { font-size: 12px; color: var(--mint); }
+#journal-content .history-entry p { margin: 5px 0; padding: 0; border: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.save-transfer { border-top: 1px solid #90ad8566; margin-top: 22px; padding-top: 8px; }
+.save-transfer h3 { font-size: 15px; font-weight: 500; }
+#import-preview { padding: 16px; border: 1px solid #95b58a; background: #233d3d; border-radius: 4px; font-size: 13px; }
+#import-date { display: block; margin-top: 6px; color: #b9cbc8; }
+#import-preview .primary { margin-top: 12px; }
+#credits-choices p { border-left: 2px solid #779681; padding: 6px 0 6px 14px; font-size: 14px; }
 
 /* A narrow window moves the rail below the scene; the world never stretches. */
 @media (max-width: 1099px) {

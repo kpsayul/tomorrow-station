@@ -62,7 +62,7 @@ const legacy={x:240,y:235,room:5,chapter:3,met:true,ticket:true,cat:true,bell:tr
    await page.setViewportSize({width:1440,height:1000});
    if(variant.choice==='table'){await visit('breakfast');await page.screenshot({path:'screenshot-reunion-table.png'});await visit('cafe-back');}else await visit('harbor-keeper');
    await approach('postbox');await page.keyboard.press('e');assert((await page.evaluate(()=>window.__check.dialogue.lines.join('\n'))).includes(variant.station==='next'?'다음역':'쉼표역'));await page.keyboard.press('Escape');assert.equal((await get()).day4.ended,false);
-   await visit('postbox');assert((await get()).day4.ended);assert.equal(await page.locator('#end-title').textContent(),variant.title);assert.equal(await page.locator('#end-next-night').isVisible(),false);
+   await visit('postbox');assert((await get()).day4.ended);assert.equal(await page.locator('#end-title').textContent(),variant.title);assert.equal(await page.locator('#end-next-night').isVisible(),true);
    await page.setViewportSize({width:390,height:844});await page.locator('#return').scrollIntoViewIfNeeded();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:`screenshot-fourth-ending-${variant.choice}.png`});
    await page.locator('#return').click();await store(3);await page.reload();await page.locator('#continue').click();assert((await get()).day4.ended);
    if((await get()).room===6)await visit('cafe-door');

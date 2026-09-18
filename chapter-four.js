@@ -156,7 +156,7 @@ window.createFourthDay = function createFourthDay(api) {
    '[우체통 안에서 동전 떨어지는 소리가 났다.\n03호가 벌써 계산을 시작한 것 같았다.]'
   ],()=>{
    p.ended=true;move(p.choice==='table'?7:6,240,247);
-   showEnding({eyebrow:'END OF THE FIRST DAY',title:p.choice==='table'?'식탁에 남겨둔 자리':'나란히 걷는 속도',body:(p.choice==='table'?'나루는 식어가는 국 앞에서 첫 월급 이야기를 했다.\n여울은 사과문을 접고, 모르는 것을 하나씩 물었다.':'두 사람은 오래 걸었고, 식당에는 조금 늦었다.\n모래는 아무 말 없이 국을 다시 데웠다.')+'\n\n돌아갈 역이 있다는 것과\n다시 만나고 싶은 사람이 있다는 것은\n조금 다른 종류의 안심이었다.\n\n— 약속의 다른 쪽, 오늘의 이야기 —',next:false});tone(523,2);tone(659,2);
+   showEnding({eyebrow:'END OF THE FIRST DAY',title:p.choice==='table'?'식탁에 남겨둔 자리':'나란히 걷는 속도',body:(p.choice==='table'?'나루는 식어가는 국 앞에서 첫 월급 이야기를 했다.\n여울은 사과문을 접고, 모르는 것을 하나씩 물었다.':'두 사람은 오래 걸었고, 식당에는 조금 늦었다.\n모래는 아무 말 없이 국을 다시 데웠다.')+'\n\n돌아갈 역이 있다는 것과\n다시 만나고 싶은 사람이 있다는 것은\n조금 다른 종류의 안심이었다.\n\n— 약속의 다른 쪽, 오늘의 이야기 —',next:true});tone(523,2);tone(659,2);
   });
  }
  function handle(id){
