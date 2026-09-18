@@ -44,6 +44,7 @@ function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10].in
  return {...fresh(),...s,chapter,room,night2:n,night3:p,day4:d,night5:f,history,x:Math.max(29,Math.min(449,s.x)),y:Math.max(floorY(room),Math.min(270,s.y))};
 }return null;}
 function readSave(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE)));}catch{return null;}}
+function readRestartBackup(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE+'-before-restart')));}catch{return null;}}
 if(readSave())$('continue').hidden=false;
 function modalOpen(){return $('journal').open||$('save-menu').open||$('credits').open||$('share-menu').open;}
 function running(){return runToggle||keys.has('shift');}
@@ -89,6 +90,7 @@ function renderSaveMenu(){
  }
  if(saveMenuMode==='load'){
   const auto=readSave();card('자동 저장',auto?{state:auto,savedAt:auto.savedAt}:null,{label:'불러오기',run:()=>{const latest=readSave();if(latest)restore(latest,'자동 저장');else renderSaveMenu();}},!auto);
+  const restartBackup=readRestartBackup();if(restartBackup)card('처음부터 시작하기 전 진행',{state:restartBackup,savedAt:restartBackup.savedAt},{label:'복구하기',run:()=>{const latest=readRestartBackup();if(latest)restore(latest,'처음부터 시작하기 전 진행');}});
   const backup=comfort.readBackup();if(backup)card('파일 가져오기 전 진행',{state:backup,savedAt:backup.savedAt},{label:'복구하기',run:()=>{const latest=comfort.readBackup();if(latest)restore(latest,'가져오기 전 진행');}});
  }
 }
@@ -112,11 +114,11 @@ function currentTask(){
  if(state.ended)return {step:'다음 밤',title:'두 번째 밤 · 받는 이 없는 편지',detail:'역에 새 편지가 도착했어요. 「두 번째 밤 시작」을 눌러 이어서 만나보세요.'};
  const stage=!state.met?0:!state.ticket?1:!state.cat?2:!state.bell?3:4;
  const tasks=[
-  {id:'keeper',room:0,title:'역무원에게 말 걸기',detail:'대합실 오른쪽 위 안내 데스크 앞으로 가세요. 아래쪽 벤치는 옆으로 돌아가면 돼요.'},
-  {id:'machine',room:0,title:'자판기에서 단서 찾기',detail:'대합실 왼쪽 빨간 자판기 앞으로 가세요.'},
+  {id:'keeper',room:0,title:'처음 보는 사람이 나를 안다',detail:'대합실 오른쪽 위 안내 데스크 앞으로 가세요. 아래쪽 벤치는 옆으로 돌아가면 돼요.'},
+  {id:'machine',room:0,title:'방울의 마지막 행방',detail:'대합실 왼쪽 빨간 자판기 앞으로 가세요.'},
   {id:'cat',room:1,title:'고양이에게 표 보여주기',detail:'승강장 오른쪽의 하얀 고양이에게 말을 걸면 표를 자동으로 보여줘요.'},
   {id:'bench',room:1,title:'벤치 아래 조사하기',detail:'승강장 왼쪽 나무 벤치 앞에서 조사해보세요.'},
-  {id:'keeper',room:0,title:'역무원에게 방울 돌려주기',detail:'대합실 오른쪽 위 역무원에게 말을 걸어주세요.'}
+  {id:'keeper',room:0,title:'어제 반납한 물건의 주인',detail:'대합실 오른쪽 위 역무원에게 말을 걸어주세요.'}
  ];
  const task={...tasks[stage],step:`0${stage+1} / 05`};
  if(state.room!==task.room){task.id=state.room?'return':'door';task.detail=`화면 맨 아래 중앙의 출구로 가서 E 또는 Enter를 눌러 ${task.room?'승강장':'대합실'}으로 이동하세요.`;}
@@ -146,37 +148,76 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  if(fifthStory.handle(e.id)||fourthDay.handle(e.id)||thirdNight.handle(e.id)||secondNight.handle(e.id))return;
  switch(e.id){
  case 'keeper':
-  if(!state.met)speak('역무원 · 여울',['이 시간에 손님이라니. 막차는 방금… 아니, 아주 오래전에 떠났어요.','이름이 기억나지 않나요? 괜찮아요. 이 역에서는 흔한 일이에요.\n저도 가끔 퇴근하는 법을 잊거든요.','혹시 작은 방울 하나를 찾아줄래요?\n누군가를 마중 나갈 때 늘 가지고 다니던 건데.','저쪽 자판기가 뭔가 봤을 거예요.\n잔돈보다 참견이 많은 친구라서요.'],()=>{state.met=true;toast('메모에 부탁을 적었습니다.');});
-  else if(state.ended)speak('역무원 · 여울',['오늘은 역이 조금 덜 조용하네요.','내일도 문을 열어둘게요.\n물건을 잃어버리지 않아도 들러도 돼요.']);
+  if(!state.met)speak('역무원 · 여울',[
+   "“이번에도 방울부터 찾아주시겠어요?”\n역무원은 말을 멈추고 접수 장부를 덮었다.",
+   "“…처음 오셨죠? 제가 손님을 잘못 봤네요.”\n이름을 말하려 했지만, 아무것도 떠오르지 않았다.",
+   "“작은 방울이에요. 동생 가방에 달아줬던 것.\n왼쪽 자판기가 마지막으로 봤대요.”"
+ ],()=>{state.met=true;toast('메모에 부탁을 적었습니다.');});
+  else if(state.ended)speak('역무원 · 여울',[
+   "여울은 새 접수표를 찢었다.\n“또 잃어버렸다고 하려던 건 아니에요.”",
+   "당신이 말없이 기다리자, 나머지 반쪽도 찢었다."
+ ]);
   else if(!state.bell)speak('역무원 · 여울',[!state.ticket?'자판기에게 물어보세요.\n돈이 없다는 말부터 하면 삐치니까 조심하고요.':!state.cat?'표에 고양이 발자국이 있네요.\n승강장에 그 표의 주인이 있을 거예요.':'그 아이가 당신을 믿나 봐요.\n고양이가 가리킨 벤치를 살펴봤나요?']);
-  else speak('역무원 · 여울',['…이 소리. 기억나요.','동생 가방에 달아줬던 방울이에요.\n길을 잃어도 소리를 따라 찾을 수 있도록.','마지막으로 다퉜던 날, 동생은 먼저 기차를 탔어요.\n저는 미안하다는 말 대신 “내일 얘기해”라고 했고요.','그 뒤로 매일 여기서 내일을 기다렸어요.\n이 방울을… 어떻게 하면 좋을까요?'],null,[{text:'가지고 가요. 기다림도 같이.',action:()=>finish('carry')},{text:'여기에 걸어요. 돌아올 수 있게.',action:()=>finish('hang')}]);
+  else speak('역무원 · 여울',[
+   "당신은 방울과 영수증을 나란히 놓았다.\n“어제 돌려받으셨다면서요.”",
+   "“제가 다시 벤치에 뒀어요.”\n여울은 영수증의 자기 서명을 손으로 가렸다.",
+   "“반납할 물건이 남아 있으면 역은 문을 안 닫아요.\n동생이 돌아왔을 때, 여기가 없어져 있으면…”",
+   "“당신까지 기다리게 하면 안 됐는데.”\n여울이 방울을 밀어놓았다. “이제 이걸 어떻게 할까요?”"
+ ],null,[{text:'가지고 가요. 기다림도 같이.',action:()=>finish('carry')},{text:'여기에 걸어요. 돌아올 수 있게.',action:()=>finish('hang')}]);
   break;
  case 'machine':
   if(!state.met)speak('자판기 · 03호',['영업 종료입니다. 감정 노동만 가능합니다.','주문은 역무원에게 먼저 해주세요.\n여긴 사연의 순서에도 예민하거든요.']);
-  else if(!state.ticket)speak('자판기 · 03호',['방울이요? 개인정보라 알려드릴 수 없습니다.\n…농담인데 아무도 안 웃더라고요.','승강장의 고양이가 반짝이는 걸 물고 갔어요.\n이 표를 보여주면 상대는 해줄 겁니다.','[자판기가 따뜻한 종이 한 장을 내밀었다.]\n행선지: 내일 / 승객: 아직 정하지 않음','유효기간은 없어요.\n미루는 사람들에게 그 정도 배려는 해야죠.'],()=>{state.ticket=true;toast('주머니에 「내일행 표」를 넣었습니다.');});
+  else if(!state.ticket)speak('자판기 · 03호',[
+   "“방울 분실 신고요? 잠깐. 어제 반납 처리했는데.”\n03호가 똑같은 영수증을 두 장 뽑았다.",
+   "작은 방울 · 반납 완료: 어제 00:03\n인수자: 여울\n“인수자 서명까지 있습니다.”",
+   "“승강장 고양이가 다시 물고 갔습니다. 이 표를 보여주세요.”\n표 뒷면에는 방금 출력한 영수증이 붙어 있었다.",
+   "당신이 표를 받자 화면이 바뀌었다.\n「직원 재발급 / 본인 보관품: 이름」\n03호는 서둘러 화면을 껐다."
+ ],()=>{state.ticket=true;toast('주머니에 「내일행 표」를 넣었습니다.');});
   else speak('자판기 · 03호',[state.ended?'오늘의 무료 음료는 따뜻한 물입니다.\n종이컵은 없으니 마음으로 드세요.':'제 꿈은 바다가 보이는 곳으로 발령받는 거예요.\n염분 때문에 안 된대요. 현실적이죠?']);
   break;
- case 'board':speak('낡은 안내판',['내일역 이용 안내\n1. 놓친 열차를 쫓아 뛰지 마세요.','2. 두고 간 마음에는 이름을 적어주세요.\n3. 돌아온 분에게 “왜 이제 왔냐”고 묻지 마세요.','아래에 누군가 작은 글씨를 덧붙였다.\n“대신, 배고프지 않냐고 물어볼 것.”']);break;
+ case 'board':speak('낡은 안내판',[
+   "내일역 보관 규정\n마지막 분실물이 주인을 찾으면 영업을 종료합니다.",
+   "「종료」 위에 종이가 덧붙어 있다.\n“분실 신고는 횟수 제한 없음.”",
+   "인쇄된 규정 아래에는 작은 연필 글씨가 있다.\n“그럼 계속 잃어버리면?”"
+ ]);break;
  case 'plant':speak('이름표 없는 화분',['흙은 촉촉하다. 누군가 매일 돌보고 있는 것 같다.','이름표 뒷면에 적혀 있다.\n“아무 소식 없는 날에도 물은 줄 것.”']);break;
  case 'door':case 'return':move(1-state.room);break;
  case 'cat':
   if(!state.ticket)speak('고양이',['야옹.','고양이는 빈 주머니를 쳐다본다.\n당신보다 사정을 잘 아는 눈치다.']);
-  else if(!state.cat)speak('고양이',['[내일행 표를 내밀었다.]','이거 아직도 발급하는구나.\n자판기 녀석, 은근히 정이 많다니까.','왜 그렇게 봐? 너도 말하잖아.','방울은 저쪽 벤치 아래에 뒀어.\n울리지 않는다고 버려진 물건인 줄 알았지.','참, 역무원에게는 내가 말한다고 하지 마.\n그러면 나한테도 근무표를 줄 거야.'],()=>{state.cat=true;toast('고양이가 왼쪽 벤치를 가리켰습니다.');});
+  else if(!state.cat)speak('고양이',[
+   "고양이가 영수증을 앞발로 눌렀다.\n“드디어 이걸 보여줬네.”",
+   "“왜 그렇게 봐? 너도 말하잖아.”\n고양이는 웃지 않았다.",
+   "“여울이 벤치에 다시 두는 걸 봤어.\n방울은 왼쪽 벤치 밑에 있어. 이번엔 영수증도 같이 줘.”",
+   "“나는 주워다 놓기만 했어. 이젠 안 할 거야.”\n고양이가 구겨진 분실물 표를 발밑에서 꺼냈다."
+ ],()=>{state.cat=true;toast('고양이가 왼쪽 벤치를 가리켰습니다.');});
   else speak('고양이',[state.ended?'좋은 밤이네.\n아직 아침이 안 왔다는 것만 빼면.':'기다리는 건 자신 있어. 고양이니까.\n하지만 저 사람은 고양이가 아니잖아.']);break;
  case 'bench':
   if(state.bell)speak('오래된 벤치',['나무 틈 사이에 작은 글씨가 새겨져 있다.\n“다음에는 꼭 같이 타기.”']);
   else if(!state.cat)speak('오래된 벤치',['두 사람이 오래 앉았던 자리처럼\n가운데만 반질반질하다.','벤치 아래에서 무언가 반짝이지만 잘 보이지 않는다.\n근처의 고양이가 당신을 유심히 바라본다.']);
-  else speak('남겨진 기억',['[벤치 아래에서 작은 방울을 주웠다.]','“언니, 내일은 바다 보러 가자.”','“내일은 바빠. 다음에.”','“언니의 다음에는 기차가 안 와?”','잠깐, 멀리서 파도 소리가 들린 것 같았다.\n방울은 손바닥 안에서 아주 작게 울렸다.'],()=>{state.bell=true;tone(1046,1.8,.035);toast('「작은 방울」을 찾았습니다. 역무원에게 돌아가세요.');});break;
+  else speak('남겨진 기억',[
+   "방울을 집자, 벤치 옆에서 두 목소리가 들렸다.\n아무도 앉아 있지 않았다.",
+   "“언니, 내일은 바다 보러 가자.”\n“내일은 바빠. 다음에.”",
+   "“그럼 나 혼자 갈게. 도착하면 편지할게.”\n“나루야. 잠깐—”",
+   "목소리가 끊겼다. 방울의 종이 꼬리표에는\n반납 도장 위로 「분실」이 다시 찍혀 있었다."
+ ],()=>{state.bell=true;tone(1046,1.8,.035);toast('「작은 방울」을 찾았습니다. 역무원에게 돌아가세요.');});break;
  case 'clock':speak('멈춘 시계',['시계는 12시 7분을 가리키고 있다.','고장 난 것 같지는 않다.\n누군가 한 문장을 끝내기를 기다리는 것 같다.']);break;
  }
 }
 function showEnding({eyebrow,title,body,next}){window.tomorrowMetrics?.track('chapter_complete',{chapter:state.chapter});clearTimeout(toastTimer);$('toast').classList.remove('show');$('end-eyebrow').textContent=eyebrow;$('end-title').textContent=title;$('end-text').textContent=body;$('end-next-night').hidden=!next;$('end-next-night').textContent=nextChapterLabel();$('return').textContent=state.chapter===4?'마을에 조금 더 머무르기 →':state.room===5?'열차에 조금 더 머무르기 →':'역에 조금 더 머무르기 →';$('credits-button').hidden=!(state.chapter===5&&state.night5.ended);$('ending').hidden=false;}
-function finish(choice){state.choice=choice;speak('역무원 · 여울',choice==='carry'?['그럼… 오늘은 제가 먼저 가볼게요.','미안하다는 말은 너무 늦었을지 몰라도,\n보고 싶다는 말은 아직 할 수 있겠죠.','다음에 만나면 먼저 물어볼게요.\n배고프지 않냐고.']:['그래요. 이곳을 찾을 수 있게.','그렇다고 여기서만 기다리진 않을래요.\n내일은 바다에 가보려고요.','혹시 먼저 오면 전해주세요.\n이번엔 내가 자리를 맡아놓겠다고.'],()=>{state.ended=true;save();objective();showEnding({eyebrow:'END OF THE FIRST NIGHT',title:choice==='carry'?'기다림을 데리고':'돌아올 자리',body:choice==='carry'?'여울은 방울을 주머니에 넣었다.\n아주 오래 멈췄던 시계가 한 칸 움직였다.\n\n어떤 내일은, 우리가 먼저 찾아가야 온다.':'문 위에 작은 방울이 걸렸다.\n이제 누군가 돌아오면 소리가 날 것이다.\n\n기다리는 자리를 남겨두고, 걸어가도 괜찮다.',next:true});tone(523,2);});}
-function begin(resume){state=resume?(readSave()||fresh()):fresh();active=true;$('start').hidden=true;$('ending').hidden=true;closeDialogue();objective();canvas.focus({preventScroll:true});window.tomorrowMetrics?.track(resume?'game_resume':'game_start',{chapter:state.chapter});if(!resume){window.tomorrowMetrics?.track('chapter_start',{chapter:1});toast('방향키로 걷고, 가까이서 E를 눌러보세요.');}}
+function finish(choice){state.choice=choice;speak('역무원 · 여울',choice==='carry'?[
+   "여울은 방울을 주머니에 넣었다.\n“찾으러 갈게요. 이번엔 제가.”",
+   "“그리고 당신 건… 없어진 게 아니에요.”\n여울은 잠긴 서랍을 바라봤다.",
+   "“맡길 때 부탁하셨어요.\n누가 부르더라도, 이름은 돌려주지 말라고.”"
+ ]:[
+   "여울은 방울을 문에 걸었다.\n밖으로 한 걸음 나갔다가, 돌아서서 방울을 울려봤다.",
+   "“돌아오는 소리네요. 제가 밖에 있어도 들릴까요.”\n그녀는 잠긴 서랍의 열쇠를 꺼냈다.",
+   "“당신 이름도 여기 있어요.\n맡긴 사람이 돌려주지 말라고 했죠. 당신이요.”"
+ ],()=>{state.ended=true;save();objective();showEnding({eyebrow:'END OF THE FIRST NIGHT',title:choice==='carry'?'기다림을 데리고':'돌아올 자리',body:(choice==='carry'?'여울은 방울을 다시 숨기지 않았다.':'문 위에 방울이 걸렸다. 이제 숨길 곳이 아니었다.')+'\n\n자판기가 마지막으로 출력한 종이가 주머니에서 펼쳐졌다.\n「이름 보관 신청 / 신청인: 본인」\n\n맨 아래에는 당신의 글씨가 있었다.\n“나를 찾으러 오면, 없다고 해주세요.”',next:true});tone(523,2);});}
+function begin(resume){if(!resume){const previous=active?state:readSave();if(previous){try{localStorage.setItem(SAVE+'-before-restart',JSON.stringify({...previous,savedAt:new Date().toISOString()}));}catch{$('save-status').textContent='이전 진행을 보관하지 못했어요. 저장 파일을 내보낸 뒤 다시 시작해주세요.';toast('이전 진행을 보관하지 못해 새 게임을 시작하지 않았어요.');return;}}}state=resume?(readSave()||fresh()):fresh();active=true;$('start').hidden=true;$('ending').hidden=true;closeDialogue();objective();canvas.focus({preventScroll:true});window.tomorrowMetrics?.track(resume?'game_resume':'game_start',{chapter:state.chapter});if(!resume){save();window.tomorrowMetrics?.track('chapter_start',{chapter:1});toast(readRestartBackup()?'이전 진행은 불러오기 메뉴에 보관했어요. 첫 밤부터 다시 시작합니다.':'방향키로 걷고, 가까이서 E를 눌러보세요.');}}
 $('begin').onclick=()=>begin(false);$('continue').onclick=()=>begin(true);$('return').onclick=()=>{$('ending').hidden=true;canvas.focus({preventScroll:true});};$('restart').onclick=()=>{begin(false);save();};
 $('next-night').onclick=$('end-next-night').onclick=()=>{const next=nextChapter();if(!next)return;$('ending').hidden=true;closeDialogue();if(next===5)fifthStory.start();else if(next===4)fourthDay.start();else if(next===3)thirdNight.start();else secondNight.start();window.tomorrowMetrics?.track('chapter_start',{chapter:state.chapter});};
 $('journal-button').onclick=()=>{keys.clear();$('journal-content').replaceChildren();let notes;
- if(state.chapter===5)notes=fifthStory.journal();else if(state.chapter===4)notes=fourthDay.journal();else if(state.chapter===3)notes=thirdNight.journal();else if(state.chapter===2)notes=secondNight.journal();else{notes=[!state.met?'나는 이름을 기억하지 못한다. 우선 역무원에게 말을 걸자.':'여울이라는 역무원이 잃어버린 방울을 찾아달라고 했다.'];if(state.ticket)notes.push('내일행 표 — 자판기가 준 따뜻한 표. 승강장 고양이에게 보여주자.');if(state.cat)notes.push('말하는 고양이 — 왼쪽 벤치 아래에 방울이 있다고 한다. 근무는 싫어한다.');if(state.bell)notes.push('작은 방울 — 누군가 함께 바다에 가자고 약속했던 기억.');if(state.ended)notes.push(state.choice==='carry'?'첫 번째 밤: 기다림을 데리고.':'첫 번째 밤: 돌아올 자리.');}
+ if(state.chapter===5)notes=fifthStory.journal();else if(state.chapter===4)notes=fourthDay.journal();else if(state.chapter===3)notes=thirdNight.journal();else if(state.chapter===2)notes=secondNight.journal();else{notes=[!state.met?'나는 이름을 기억하지 못한다. 우선 역무원에게 말을 걸자.':'여울은 처음 보는 나에게 “이번에도” 방울을 찾아달라고 했다.'];if(state.ticket)notes.push('영수증: 방울은 어제 여울에게 반납됐다. 내일행 표와 함께 승강장 고양이에게 보여주자.');if(state.cat)notes.push('고양이는 여울이 방울을 다시 숨기는 것을 봤다. 왼쪽 벤치 아래를 확인하자.');if(state.bell)notes.push('방울 속의 나루는 도착하면 편지하겠다고 했다. 여울에게 영수증과 함께 돌려주자.');if(state.ended)notes.push(state.choice==='carry'?'첫 번째 밤: 기다림을 데리고.':'첫 번째 밤: 돌아올 자리.');}
  comfort.showJournal(notes);};$('close-journal').onclick=()=>{$('journal').close();canvas.focus({preventScroll:true});};
 window.addEventListener('keydown',e=>{if(modalOpen())return;if(e.target instanceof HTMLElement&&e.target.closest('button')&&['Enter',' '].includes(e.key))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].includes(e.key)&&active)e.preventDefault();if(e.key==='Escape'){closeDialogue();keys.clear();return;}if(['e','E','Enter',' '].includes(e.key)&&!e.repeat){interact();return;}keys.add(e.key.toLowerCase());});window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();if(active)save();});document.addEventListener('visibilitychange',()=>{keys.clear();if(active)save();if(audio){if(document.hidden)audio.suspend();else if(sound)audio.resume();}});
 for(const b of document.querySelectorAll('[data-dir]')){const k={up:'arrowup',down:'arrowdown',left:'arrowleft',right:'arrowright'}[b.dataset.dir];b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(k);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys.delete(k);}$('touch-action').onclick=interact;

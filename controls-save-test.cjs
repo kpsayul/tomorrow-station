@@ -7,7 +7,7 @@ const SAVE='tomorrow-station-v1';
  try{
  const context=await browser.newContext({viewport:{width:1280,height:1100}});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},frame,keys,allowed,move,objective};requestAnimationFrame(frame);window.addEventListener')}));
+ await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},frame,keys,allowed,move,objective,begin};requestAnimationFrame(frame);window.addEventListener')}));
  await page.goto(process.env.GAME_URL||'http://localhost:8080/tomorrow-station/');
  await page.locator('#load-button').click();
  assert.equal(await page.locator('#save-slots button:disabled').count(),4);
@@ -55,6 +55,17 @@ const SAVE='tomorrow-station-v1';
  await page.setViewportSize({width:390,height:844});await page.locator('#load-button').click();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'screenshot-save-mobile.png'});await page.locator('#close-save-menu').click();
+ // Replaying revised chapters preserves the complete previous journey and manual slots.
+ const priorReplay=await snapshot(),manualBeforeReplay=await page.evaluate(key=>localStorage.getItem(key),SAVE+'-slot-3');
+ await page.reload();await page.locator('#begin').click();assert.equal((await snapshot()).chapter,1);assert.equal((await snapshot()).met,false);
+ assert.equal(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).chapter,SAVE),1);
+ await page.reload();await page.locator('#load-button').click();
+ await page.locator('.save-slot').filter({hasText:'처음부터 시작하기 전 진행'}).getByRole('button').click();
+ const restored=await snapshot();delete restored.savedAt;delete priorReplay.savedAt;assert.deepEqual(restored,priorReplay);
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),SAVE+'-slot-3'),manualBeforeReplay);
+ const beforeRefusedRestart=await snapshot();
+ await page.evaluate(()=>{const write=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.endsWith('-before-restart'))throw new DOMException('Full','QuotaExceededError');return write.call(this,key,value);};window.__check.begin(false);Storage.prototype.setItem=write;});
+ assert.deepEqual(await snapshot(),beforeRefusedRestart);assert((await page.locator('#save-status').textContent()).includes('이전 진행을 보관하지 못했어요'));
  // Malformed data is handled without changing the current session.
  await page.evaluate(key=>localStorage.setItem(key,'{broken'),`${SAVE}-slot-2`);
  const before=await snapshot();await page.locator('#load-button').click();assert(await page.locator('#save-slots .save-slot').nth(1).getByRole('button').isDisabled());await page.keyboard.press('Escape');assert.deepEqual(await snapshot(),before);
