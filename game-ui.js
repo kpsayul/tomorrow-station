@@ -28,7 +28,7 @@ window.createGameComfort=function(api){
   const state=api.state(),player=state.night2.remembered||state.chapter>=3?'온 · 주인공':'당신 · 주인공';
   const names={'당신':player,'온':player,'당신의 답장':player+' · 답장','당신의 기록':player+' · 기록','당신의 엽서':player+' · 엽서','어제의 온':'온 · 어제의 메모','어린 온의 편지':'어린 온 · 편지','당신의 안내 방송':player+' · 안내 방송'};
   const label=name=>names[name]||name;
-  const cue=/^(당신의 답장|당신의 기록|당신의 엽서|어린 온의 편지|어제의 온|어린 온|당신|온|여울|나루|후추|고양이|03호|백지|모래|이음|서린|결|연|담|손님|이야기):\s*(.*)$/;
+  const cue=/^(당신의 답장|당신의 기록|당신의 엽서|어린 온의 편지|어제의 온|어린 온|우산을 쓴 아이|아이|당신|온|여울|나루|후추|고양이|03호|백지|모래|이음|서린|결|연|담|손님|이야기):\s*(.*)$/;
   const turns=[];let tagged=false;
   for(const part of line.split('\n')){
    const match=part.match(cue);
@@ -37,17 +37,28 @@ window.createGameComfort=function(api){
    else turns.push({speaker:'이야기',text:part,narration:true});
   }
   if(!tagged)return {speaker:label(defaultSpeaker),portrait:label(defaultSpeaker),text:line,turns:null};
-  const speakers=[...new Set(turns.filter(t=>!t.narration).map(t=>t.speaker))];
-  return {speaker:speakers.join(' / ')||'이야기',portrait:speakers.length===1?speakers[0]:'이야기',turns,text:turns.map(t=>t.narration?t.text:`${t.speaker}: ${t.text}`).join('\n')};
+  return {turns};
  }
  function renderDialogue(page){
   $('speaker').textContent=page.speaker;portrait(page.portrait);$('line').replaceChildren();
   if(!page.turns){$('line').textContent=page.text;return;}
   for(const turn of page.turns){
    const block=document.createElement('span');block.className=turn.narration?'dialogue-narration':'dialogue-turn';
-   if(!turn.narration){const name=document.createElement('strong');name.className='dialogue-speaker';name.textContent=turn.speaker+'\n';block.append(name);}
    const content=document.createElement('span');content.textContent=turn.text;block.append(content);$('line').append(block);
   }
+ }
+ function dialoguePages(speaker,lines){
+  return lines.flatMap(line=>{
+   const parsed=dialoguePage(speaker,line);if(!parsed.turns)return [parsed];
+   const pages=[];let turns=[],voice=null;
+   function flush(){if(!turns.length)return;pages.push({speaker:voice||'이야기',portrait:voice||'이야기',turns,text:turns.map(t=>t.narration?t.text:`${t.speaker}: ${t.text}`).join('\n')});turns=[];voice=null;}
+   for(const turn of parsed.turns){
+    if(!turn.narration&&voice&&voice!==turn.speaker)flush();
+    if(!turn.narration)voice=turn.speaker;
+    turns.push(turn);
+   }
+   flush();return pages;
+  });
  }
  function remember(dialogue,page){if(dialogue.index<=(dialogue.recorded??-1))return;dialogue.recorded=dialogue.index;const history=api.state().history;history.push({speaker:page.speaker,text:page.text,chapter:api.state().chapter});if(history.length>80)history.splice(0,history.length-80);}
  function portrait(speaker){
@@ -98,5 +109,5 @@ window.createGameComfort=function(api){
  };
  $('close-credits').onclick=()=>$('credits').close();
  $('credits').addEventListener('close',()=>api.canvas.focus({preventScroll:true}));
- return {showJournal,dialoguePage,renderDialogue,remember,portrait,transition,prepareSaveMenu,readBackup};
+ return {showJournal,dialoguePages,renderDialogue,remember,portrait,transition,prepareSaveMenu,readBackup};
 };

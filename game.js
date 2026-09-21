@@ -10,7 +10,7 @@ const freshNight3=()=>({board:false,witnesses:[],inspector:false,signals:[null,n
 const freshDay4=()=>({notice:false,letter:false,met:false,mirrors:[0,0,1],lit:false,choice:null,reunited:false,photos:[],ended:false});
 const freshNight5=()=>({met:false,guestChoice:null,cup:false,served:false,route:[],ticket:false,ready:false,watered:false,ended:false});
 const freshJourney2=()=>({six:{met:false,clues:[],route:[null,null,null],aligned:false,choice:null,ended:false},seven:{met:false,director:false,evidence:[],proven:false,choice:null,ended:false},eight:{met:false,heard:false,challenge:false,live:false,policy:null,ended:false}});
-const fresh=()=>({x:240,y:224,room:0,met:false,ticket:false,cat:false,bell:false,choice:null,ended:false,chapter:1,night2:freshNight2(),night3:freshNight3(),day4:freshDay4(),night5:freshNight5(),journey2:freshJourney2(),history:[]});
+const fresh=()=>({x:240,y:224,room:0,met:false,firstQuestion:null,ticket:false,cat:false,bell:false,choice:null,ended:false,chapter:1,night2:freshNight2(),night3:freshNight3(),day4:freshDay4(),night5:freshNight5(),journey2:freshJourney2(),history:[]});
 let state=fresh(), active=false, conversation=null, keys=new Set(), time=0,last=0,toastTimer;
 let audio=null,sound=false,musicTimer=null,noteIndex=0;
 let runToggle=false,saveMenuMode='save',saveFailed=false;
@@ -51,7 +51,7 @@ function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10,11,
  const chapter=[2,3,4,5,6,7,8].includes(s.chapter)?s.chapter:1,room=chapter>=6?(([chapter*2-1,chapter*2].includes(s.room))?s.room:chapter*2-1):chapter===5?([0,1,9,10].includes(s.room)?s.room:0):chapter===4?([6,7,8].includes(s.room)?s.room:6):Math.min(s.room,chapter===1?1:chapter===2?3:5);
  const history=Array.isArray(s.history)?s.history.filter(e=>e&&typeof e.speaker==='string'&&typeof e.text==='string').slice(-80).map(e=>({speaker:e.speaker.slice(0,100),text:e.text.slice(0,2000),chapter:[1,2,3,4,5,6,7,8].includes(e.chapter)?e.chapter:chapter})):[];
  for(const [obj,defaults] of [[n,freshNight2()],[p,freshNight3()],[d,freshDay4()],[f,freshNight5()]])for(const key of Object.keys(defaults))if(typeof defaults[key]==='boolean')obj[key]=obj[key]===true;
- return {...fresh(),...s,chapter,room,night2:n,night3:p,day4:d,night5:f,journey2:j,history,x:Math.max(29,Math.min(449,s.x)),y:Math.max(floorY(room),Math.min(270,s.y))};
+ return {...fresh(),...s,firstQuestion:['again','name'].includes(s.firstQuestion)?s.firstQuestion:null,chapter,room,night2:n,night3:p,day4:d,night5:f,journey2:j,history,x:Math.max(29,Math.min(449,s.x)),y:Math.max(floorY(room),Math.min(270,s.y))};
 }return null;}
 function readSave(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE)));}catch{return null;}}
 function readRestartBackup(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE+'-before-restart')));}catch{return null;}}
@@ -149,25 +149,26 @@ function toast(text){$('toast').textContent=text;$('toast').classList.add('show'
 function tone(freq,duration=.4,volume=.025){if(!sound||!audio)return;const o=audio.createOscillator(),v=audio.createGain();o.type='sine';o.frequency.value=freq;v.gain.setValueAtTime(0,audio.currentTime);v.gain.linearRampToValueAtTime(volume,audio.currentTime+.025);v.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);o.connect(v);v.connect(audio.destination);o.start();o.stop(audio.currentTime+duration);}
 function music(){const notes=[261.63,329.63,392,493.88,440,392,329.63,293.66,261.63,329.63,392,523.25,493.88,392,293.66,329.63];tone(notes[noteIndex++%notes.length],1.8,.018);if(noteIndex%4===1)tone(130.81,3,.016);}
 $('sound').onclick=async()=>{try{audio ||= new (window.AudioContext||window.webkitAudioContext)();await audio.resume();sound=!sound;$('sound').textContent=sound?'소리 끄기 ♫':'소리 켜기 ♫';$('sound').setAttribute('aria-pressed',String(sound));if(sound){music();musicTimer=setInterval(music,680);}else clearInterval(musicTimer);}catch{toast('이 브라우저에서는 소리를 켤 수 없어요.');}};
-function speak(speaker,lines,after=null,choices=null){keys.clear();conversation={speaker,lines,index:0,after,choices};$('dialogue').hidden=false;paintDialogue();tone(523,.1,.015);}
-function paintDialogue(){const d=conversation,page=comfort.dialoguePage(d.speaker,d.lines[d.index]);comfort.remember(d,page);comfort.renderDialogue(page);$('previous').disabled=d.index===0;$('page').textContent=`${d.index+1} / ${d.lines.length}`;$('choices').replaceChildren();const choose=d.index===d.lines.length-1&&d.choices;$('next').hidden=!!choose;if(choose){for(const c of d.choices){const b=document.createElement('button');b.textContent=c.text;b.onclick=()=>{closeDialogue();c.action();};$('choices').append(b);}}}
+function speak(speaker,lines,after=null,choices=null){keys.clear();const pages=comfort.dialoguePages(speaker,lines);conversation={speaker,pages,lines:pages.map(page=>page.text),index:0,after,choices};$('dialogue').hidden=false;paintDialogue();tone(523,.1,.015);}
+function paintDialogue(){const d=conversation,page=d.pages[d.index];comfort.remember(d,page);comfort.renderDialogue(page);$('dialogue').scrollTop=0;$('previous').disabled=d.index===0;$('page').textContent=`${d.index+1} / ${d.lines.length}`;$('choices').replaceChildren();const choose=d.index===d.lines.length-1&&d.choices;$('next').hidden=!!choose;if(choose){for(const c of d.choices){const b=document.createElement('button');b.textContent=c.text;b.onclick=()=>{closeDialogue();c.action();};$('choices').append(b);}}}
 function closeDialogue(){conversation=null;$('dialogue').hidden=true;canvas.focus({preventScroll:true});}
 function advance(){if(!conversation)return;const d=conversation;if(d.index<d.lines.length-1){d.index++;paintDialogue();tone(392,.07,.01);}else if(!d.choices){closeDialogue();if(d.after)d.after();objective();save();}}
 $('next').onclick=advance;
 $('previous').onclick=()=>{if(conversation&&conversation.index>0){conversation.index--;paintDialogue();}};
 $('interaction').onclick=interact;
 function closest(){let result=null,best=Infinity;for(const e of roomEntities()){const d=Math.hypot(e.x-state.x,e.y-state.y);if(d<e.radius&&d<best){best=d;result=e;}}return result;}
+function firstReply(question){speak('역무원 · 여울',[
+ question==='again'?'당신: 방금 “이번에도”라고 했죠?':'당신: 제 이름도 알고 있나요? 저는 기억이 안 나요.',
+ question==='again'?'여울: …사람을 잘못 봤어요.\n이야기: 여울은 장부를 뒤집었다. 당신과 같은 옷의 사진이 잠깐 보였다.':'여울: 알고는 있어요. 그런데 제가 먼저 말하면…\n이야기: 잠긴 서랍 안에서 무언가 한 번 움직였다.',
+ '여울: 동생 방울부터 찾아주세요. 왼쪽 자판기에 기록이 있어요.\n이야기: 그녀는 종이컵 두 개를 꺼냈다가 하나를 포갰다. 남은 컵에는 작은 고래가 그려져 있었다.'
+],()=>{state.firstQuestion=question;state.met=true;toast('자판기에 남은 반납 기록을 확인해보세요.');});}
 function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conversation){advance();return;}const e=closest();if(!e){toast('조금 더 가까이 다가가 보세요.');return;}
  if(secondJourney.handle(e.id)||fifthStory.handle(e.id)||fourthDay.handle(e.id)||thirdNight.handle(e.id)||secondNight.handle(e.id))return;
  switch(e.id){
  case 'keeper':
   if(!state.met)speak('역무원 · 여울',[
-   "“이번에도 방울부터 찾아주시겠어요?”\n역무원은 말을 멈추고 접수 장부를 덮었다.",
-   "“…처음 오셨죠? 제가 손님을 잘못 봤네요.”\n이름을 말하려 했지만, 아무것도 떠오르지 않았다.",
-   "여울은 책상 아래에서 종이컵 두 개를 꺼냈다.\n잠깐 손을 멈추더니, 하나를 다시 포갰다.",
-   "“드시겠어요?”\n당신에게 남은 컵을 내밀었다. 가장자리에 작은 고래가 그려져 있었다.",
-   "“작은 방울이에요. 동생 가방에 달아줬던 것.\n왼쪽 자판기가 마지막으로 봤대요.”"
- ],()=>{state.met=true;toast('메모에 부탁을 적었습니다.');});
+   "여울: 이번에도 방울부터 찾아주시겠어요?\n이야기: 역무원은 말을 멈추고 접수 장부를 덮었다. 당신에겐 낯선 얼굴이다."
+ ],null,[{text:'방금 “이번에도”라고 했죠?',action:()=>firstReply('again')},{text:'제 이름도 알고 있나요?',action:()=>firstReply('name')}]);
   else if(state.ended)speak('역무원 · 여울',[
    "여울은 새 접수표를 찢었다.\n“또 잃어버렸다고 하려던 건 아니에요.”",
    "당신이 말없이 기다리자, 나머지 반쪽도 찢었다."
@@ -183,10 +184,9 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  case 'machine':
   if(!state.met)speak('자판기 · 03호',['영업 종료입니다. 감정 노동만 가능합니다.','주문은 역무원에게 먼저 해주세요.\n여긴 사연의 순서에도 예민하거든요.']);
   else if(!state.ticket)speak('자판기 · 03호',[
-   "“방울 분실 신고요? 잠깐. 어제 반납 처리했는데.”\n03호가 똑같은 영수증을 두 장 뽑았다.",
-   "작은 방울 · 반납 완료: 어제 00:03\n인수자: 여울\n“인수자 서명까지 있습니다.”",
-   "“승강장 고양이가 다시 물고 갔습니다. 이 표를 보여주세요.”\n표 뒷면에는 방금 출력한 영수증이 붙어 있었다.",
-   "당신이 표를 받자 화면이 바뀌었다.\n「직원 재발급 / 본인 보관품: 이름」\n03호는 서둘러 화면을 껐다."
+   "03호: 그 방울, 어제 여울 씨에게 돌려드렸는데요.\n이야기: 영수증에는 「반납 완료 00:03 / 인수자 여울」이라고 적혀 있었다.",
+   state.firstQuestion==='name'?'03호: 이름도 맡기셨네요. 직접.\n이야기: 「직원 재발급 / 본인 보관품: 이름」이 화면에 떴다.':'03호: 손님용 표가 안 나오네요. 이미 직원이셔서.\n이야기: 「직원 재발급 / 본인 보관품: 이름」이 화면에 떴다.',
+   "03호: 승강장 고양이에게 이걸 보여주세요. 방울을 다시 물고 간 녀석이에요.\n이야기: 당신은 표와 반납 영수증을 함께 챙겼다."
  ],()=>{state.ticket=true;toast('주머니에 「내일행 표」를 넣었습니다.');});
   else speak('자판기 · 03호',[state.ended?'오늘의 무료 음료는 따뜻한 물입니다.\n종이컵은 없으니 마음으로 드세요.':'제 꿈은 바다가 보이는 곳으로 발령받는 거예요.\n염분 때문에 안 된대요. 현실적이죠?']);
   break;
@@ -200,22 +200,18 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  case 'cat':
   if(!state.ticket)speak('고양이',['야옹.','고양이는 빈 주머니를 쳐다본다.\n당신보다 사정을 잘 아는 눈치다.']);
   else if(!state.cat)speak('고양이',[
-   "고양이가 영수증을 앞발로 눌렀다.\n“드디어 이걸 보여줬네.”",
-   "“왜 그렇게 봐? 너도 말하잖아.”\n고양이는 당신 신발 위에 앞발을 올렸다. 익숙한 자리처럼.",
-   "“여울이 벤치에 다시 두는 걸 봤어.\n방울은 왼쪽 벤치 밑에 있어. 이번엔 영수증도 같이 줘.”",
-   "“나는 주워다 놓기만 했어. 이젠 안 할 거야.”\n고양이가 구겨진 분실물 표를 발밑에서 꺼냈다."
+   "고양이: 드디어 이걸 보여줬네.\n이야기: 고양이가 영수증을 누르더니, 익숙한 듯 당신 신발에 발을 올렸다.",
+   "고양이: 왜 그렇게 봐? 너도 말하잖아.\n여울이 방울을 다시 숨기는 걸 봤어. 왼쪽 벤치 밑이야.",
+   "고양이: 이번에는 영수증도 같이 줘. 또 처음 보는 척 못 하게."
  ],()=>{state.cat=true;toast('고양이가 왼쪽 벤치를 가리켰습니다.');});
   else speak('고양이',[state.ended?'좋은 밤이네.\n아직 아침이 안 왔다는 것만 빼면.':'기다리는 건 자신 있어. 고양이니까.\n하지만 저 사람은 고양이가 아니잖아.']);break;
  case 'bench':
   if(state.bell)speak('오래된 벤치',['나무 틈 사이에 작은 글씨가 새겨져 있다.\n“다음에는 꼭 같이 타기.”']);
   else if(!state.cat)speak('오래된 벤치',['두 사람이 오래 앉았던 자리처럼\n가운데만 반질반질하다.','벤치 아래에서 무언가 반짝이지만 잘 보이지 않는다.\n근처의 고양이가 당신을 유심히 바라본다.']);
   else speak('남겨진 기억',[
-   "방울을 집자, 빈 벤치에 두 사람의 그림자가 겹쳤다.\n한 사람은 컵을 들고, 다른 사람은 그 위에 펜으로 뭔가 그렸다.",
-   "나루: 언니, 내 컵에 왜 감자 그렸어?\n여울: 고래야. 위에 물 뿜고 있잖아.\n나루: 싹 났네.",
-   "여울이 나루의 컵을 가져다 몇 번 불었다.\n나루는 기다리는 동안 언니 컵의 거품을 훔쳐 먹었다.",
-   "나루: 언니 거가 더 맛있어.\n여울: 똑같은 거야.\n나루: 그럼 바꿔도 되겠네.",
-   "두 사람의 웃음이 먼저 사라졌다.\n다음 목소리는 조금 더 자란 나루의 것이었다.",
-   "나루: 언니, 내일은 바다 보러 가자.\n여울: 내일은 바빠. 다음에.",
+   "나루: 언니, 내 컵에 왜 감자 그렸어?\n이야기: 방울을 집자 빈 벤치에 두 자매의 그림자가 겹쳤다.\n여울: 고래야. 위에 물 뿜고 있잖아.\n나루: 싹 났네.",
+   "나루: 언니 거가 더 맛있어.\n이야기: 여울이 동생의 컵을 불어주는 동안, 나루는 언니 컵의 거품을 훔쳐 먹었다.",
+   "이야기: 웃음이 끊겼다. 다음 목소리는 조금 더 자라 있었다.\n나루: 내일은 바다 보러 가자.\n여울: 내일은 바빠. 다음에.",
    "나루: 그럼 나 혼자 갈게. 도착하면 편지할게.\n여울: 나루야. 잠깐—",
    "목소리가 끊겼다. 방울의 종이 꼬리표에는\n반납 도장 위로 「분실」이 다시 찍혀 있었다."
  ],()=>{state.bell=true;tone(1046,1.8,.035);toast('「작은 방울」을 찾았습니다. 역무원에게 돌아가세요.');});break;

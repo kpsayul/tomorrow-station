@@ -21,11 +21,14 @@ const fs=require('node:fs');
   await page.locator('#previous').click();assert.equal(await page.locator('#speaker').textContent(),'당신 · 주인공');
   assert.equal(await page.evaluate(()=>window.__check.state.history.length),historyCount);
   await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>window.__check.state.ended),false);
-  // Naming the cat has two speakers on the same page. The player's label also
+  // Naming the cat must now give each speaker their own page. The player's label
   // stays clear on the branch where the name tag is left in storage.
   await page.evaluate(()=>{const t=window.__check;t.state.chapter=2;Object.assign(t.state.night2,{remembered:true,choice:'letter'});t.move(1,348,186);t.interact();});
-  assert.deepEqual(await page.locator('.dialogue-speaker').allTextContents(),['온 · 주인공\n','후추\n']);
-  assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공 / 후추');
+  assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공');
+  assert.equal(await page.locator('.dialogue-turn').textContent(),'후추.');
+  await page.locator('#next').click();assert.equal(await page.locator('#speaker').textContent(),'후추');
+  assert.equal(await page.locator('.dialogue-turn').textContent(),'응.');
+  await page.locator('#previous').click();assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공');
   await page.setViewportSize({width:320,height:568});await page.locator('#dialogue').scrollIntoViewIfNeeded();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('#next').scrollIntoViewIfNeeded();assert(await page.locator('#next').isVisible());
@@ -41,18 +44,22 @@ const fs=require('node:fs');
   await page.evaluate(()=>window.__check.speak('후추',['온. 왜 여울 이름을 쳐다봐?\n주소: 물결마을\n<img src=x onerror=alert(1)>']));
   assert.equal(await page.locator('#speaker').textContent(),'후추');assert.equal(await page.locator('#line img').count(),0);assert.equal(await page.locator('.dialogue-speaker').count(),0);
   await page.keyboard.press('Escape');
-  // Callback/choice boundaries stay on their original pages; going backwards
+  // Callback/choice boundaries follow the final split page; going backwards
   // or cancelling must not complete the conversation or duplicate history.
   await page.evaluate(()=>{const t=window.__check;t.speak('대화',['서린: 기록을 고칠까요?\n당신: 우리 것도요.','당신: <b>그대로 적어주세요.</b>'],()=>{t.state.speakerCompleted=true;});});
   await page.setViewportSize({width:844,height:390});await page.locator('#next').click();
   assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공');assert.equal(await page.locator('#line b').count(),0);
+  assert.equal(await page.locator('.dialogue-turn').textContent(),'우리 것도요.');
   assert.equal(await page.evaluate(()=>window.__check.state.speakerCompleted),undefined);
-  await page.locator('#previous').click();await page.locator('#next').click();await page.locator('#next').click();
+  await page.locator('#previous').click();assert.equal(await page.locator('#speaker').textContent(),'서린');await page.locator('#next').click();await page.locator('#next').click();
+  assert.equal(await page.locator('.dialogue-turn').textContent(),'<b>그대로 적어주세요.</b>');assert.equal(await page.locator('#line b').count(),0);
+  assert.equal(await page.evaluate(()=>window.__check.state.speakerCompleted),undefined);
+  await page.locator('#next').click();
   assert.equal(await page.evaluate(()=>window.__check.state.speakerCompleted),true);
   await page.reload();await page.locator('#continue').click();await page.locator('#journal-button').click();await page.locator('[data-journal-tab="history"]').click();
   assert((await page.locator('#journal-content').textContent()).includes('온 · 주인공: 우리 것도요.'));
   assert((await page.locator('#journal-content').textContent()).includes('당신 · 주인공: 어제 돌려받으셨다면서요.'));
   assert.equal(await page.locator('#journal-content b').count(),0);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  assert.deepEqual(errors,[]);console.log('PASS: real On dialogue before/after name reveal; mixed speakers; distinct portrait; narration; previous/cancel/completion; saved history; safe text; 320px portrait and 844px landscape.');
+  assert.deepEqual(errors,[]);console.log('PASS: real On dialogue before/after name reveal; one speaker per page; distinct portrait; narration; previous/cancel/completion after split; saved history; safe text; 320px portrait and 844px landscape.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
