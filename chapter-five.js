@@ -102,7 +102,7 @@ window.createFifthStory=function(api){
    "백지: 내일은…\n당신: 돌아오는 날짜는 정하면 알려주세요.\n백지는 빈 귀환란을 그대로 접었다.",
    "기차가 떠났다. 당신은 어린 자신의 편지에 답장을 썼다.\n「오늘 바다 봤어. 후추도 같이 갔어. 늦어서 미안.」",
   p().guestChoice==='quiet'?'벤치의 손님이 옆자리를 두드렸다.\n당신은 남은 신청서들을 서랍에 넣고 잠깐 앉았다.':'벤치의 손님이 물었다. “바다에서 뭐 봤어요?”\n당신은 일 얘기 대신, 고양이가 갈매기에게 진 얘기를 했다.'
- ],()=>{p().ended=true;save();objective();showEnding({eyebrow:'THE END · A PLACE TO COME BACK TO',title:p().guestChoice==='quiet'?'말없이 함께 있던 날':'처음 듣는 이야기',body:'03호가 영수증을 한 장 출력했다.\n작은 방울 · 반납 완료. 이번에는 취소 줄이 없었다.\n\n여울은 목요일 여섯 시에 전화를 걸었다.\n나루는 두 번째 벨에 받았다.\n\n후추가 당신의 편지 위에 발자국을 찍었다.\n“숙제 끝.”\n\n— 내일 분실물 보관소 · 첫 번째 여정 끝 —',next:false});tone(523,2);tone(783,2);});}
+ ],()=>{p().ended=true;save();objective();showEnding({eyebrow:'THE END · A PLACE TO COME BACK TO',title:p().guestChoice==='quiet'?'말없이 함께 있던 날':'처음 듣는 이야기',body:'03호가 영수증을 한 장 출력했다.\n작은 방울 · 반납 완료. 이번에는 취소 줄이 없었다.\n\n여울은 목요일 여섯 시에 전화를 걸었다.\n나루는 두 번째 벨에 받았다.\n\n후추가 당신의 편지 위에 발자국을 찍었다.\n“숙제 끝.”\n\n— 내일 분실물 보관소 · 첫 번째 여정 끝 —',next:true});tone(523,2);tone(783,2);});}
  function handle(id){if(state().chapter!==5)return false;switch(id){
   case 'keeper':keeper();break;
   case 'visitor':visitor();break;

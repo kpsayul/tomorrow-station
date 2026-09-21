@@ -9,7 +9,8 @@ const freshNight2=()=>({met:false,clues:[],sequence:[],tuned:false,remembered:fa
 const freshNight3=()=>({board:false,witnesses:[],inspector:false,signals:[null,null,null],signalDone:false,announced:false,choice:null,ended:false});
 const freshDay4=()=>({notice:false,letter:false,met:false,mirrors:[0,0,1],lit:false,choice:null,reunited:false,photos:[],ended:false});
 const freshNight5=()=>({met:false,guestChoice:null,cup:false,served:false,route:[],ticket:false,ready:false,watered:false,ended:false});
-const fresh=()=>({x:240,y:224,room:0,met:false,ticket:false,cat:false,bell:false,choice:null,ended:false,chapter:1,night2:freshNight2(),night3:freshNight3(),day4:freshDay4(),night5:freshNight5(),history:[]});
+const freshJourney2=()=>({six:{met:false,clues:[],route:[null,null,null],aligned:false,choice:null,ended:false},seven:{met:false,director:false,evidence:[],proven:false,choice:null,ended:false},eight:{met:false,heard:false,challenge:false,live:false,policy:null,ended:false}});
+const fresh=()=>({x:240,y:224,room:0,met:false,ticket:false,cat:false,bell:false,choice:null,ended:false,chapter:1,night2:freshNight2(),night3:freshNight3(),day4:freshDay4(),night5:freshNight5(),journey2:freshJourney2(),history:[]});
 let state=fresh(), active=false, conversation=null, keys=new Set(), time=0,last=0,toastTimer;
 let audio=null,sound=false,musicTimer=null,noteIndex=0;
 let runToggle=false,saveMenuMode='save',saveFailed=false;
@@ -21,16 +22,17 @@ const secondNight=createSecondNight({state:()=>state,baseEntities:entities,speak
 const thirdNight=createThirdNight({state:()=>state,previousEntities:secondNight.roomEntities,speak,toast,tone,save,objective,move,showEnding,rect,text,glow,g});
 const fourthDay=createFourthDay({state:()=>state,speak,toast,tone,save,objective,move,showEnding,rect,text,glow,person});
 const fifthStory=createFifthStory({state:()=>state,speak,toast,tone,save,objective,move,showEnding,rect,text,glow,person});
+const secondJourney=createSecondJourney({state:()=>state,speak,toast,tone,save,objective,move,showEnding,rect,text,glow});
 const comfort=createGameComfort({state:()=>state,active:()=>active,readSave,normaliseSave,restore,saveSummary,formatSavedAt,currentTask,keys,canvas});
 const sharing=createGameSharing({state:()=>state,keys,canvas});
-function roomEntities(){return state.chapter===5?fifthStory.roomEntities(state.room):state.chapter===4?fourthDay.roomEntities(state.room):state.chapter===3?thirdNight.roomEntities(state.room):secondNight.roomEntities(state.room);}
+function roomEntities(){return state.chapter>=6?secondJourney.roomEntities(state.room):state.chapter===5?fifthStory.roomEntities(state.room):state.chapter===4?fourthDay.roomEntities(state.room):state.chapter===3?thirdNight.roomEntities(state.room):secondNight.roomEntities(state.room);}
 function move(room,x=240,y=230){state.room=room;state.x=x;state.y=y;keys.clear();objective();save();comfort.transition();tone(293,.7);}
-function stationTime(){return state.chapter===5?(state.night5.ended?'18:05':'17:00'):state.chapter===4?(state.day4.ended?'09:12':state.day4.lit?'08:40':'08:07'):state.chapter===3?(state.night3.ended?'06:12':state.night3.announced?'05:59':'00:10'):state.night2.ended?'00:09':state.ended?'00:08':'00:07';}
-function nextChapter(){return state.chapter===1&&state.ended?2:state.chapter===2&&state.night2.ended?3:state.chapter===3&&state.night3.ended?4:state.chapter===4&&state.day4.ended?5:null;}
-function nextChapterLabel(){return nextChapter()===5?'마지막 이야기 시작 →':nextChapter()===4?'바닷가 이야기 시작 →':nextChapter()===3?'세 번째 밤 시작 →':'두 번째 밤 시작 →';}
-function floorY(room){return room===10?161:fourthDay.minY[room]??(room===1?173:138);}
+function stationTime(){return state.chapter>=6?({6:'22:40',7:'23:10',8:state.journey2.eight.ended?'05:48':'04:30'}[state.chapter]):state.chapter===5?(state.night5.ended?'18:05':'17:00'):state.chapter===4?(state.day4.ended?'09:12':state.day4.lit?'08:40':'08:07'):state.chapter===3?(state.night3.ended?'06:12':state.night3.announced?'05:59':'00:10'):state.night2.ended?'00:09':state.ended?'00:08':'00:07';}
+function nextChapter(){return state.chapter===1&&state.ended?2:state.chapter===2&&state.night2.ended?3:state.chapter===3&&state.night3.ended?4:state.chapter===4&&state.day4.ended?5:state.chapter===5&&state.night5.ended?6:state.chapter===6&&state.journey2.six.ended?7:state.chapter===7&&state.journey2.seven.ended?8:null;}
+function nextChapterLabel(){return nextChapter()===8?'마지막 수취인 시작 →':nextChapter()===7?'반송된 도시 시작 →':nextChapter()===6?'2부 · 0번선 시작 →':nextChapter()===5?'다섯 번째 이야기 시작 →':nextChapter()===4?'바닷가 이야기 시작 →':nextChapter()===3?'세 번째 밤 시작 →':'두 번째 밤 시작 →';}
+function floorY(room){return secondJourney.minY[room]??(room===10?161:fourthDay.minY[room]??(room===1?173:138));}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify({...state,savedAt:new Date().toISOString()}));saveFailed=false;$('save-status').textContent='자동 저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});return true;}catch{$('save-status').textContent='자동 저장 실패 · 저장 메뉴에서 파일로 내보낼 수 있어요';if(!saveFailed)toast('자동 저장하지 못했어요. 저장 메뉴에서 진행을 파일로 보관해주세요.');saveFailed=true;return false;}}
-function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10].includes(s.room)&&Number.isFinite(s.x)&&Number.isFinite(s.y)){
+function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(s.room)&&Number.isFinite(s.x)&&Number.isFinite(s.y)){
  const n={...freshNight2(),...s.night2};n.clues=Array.isArray(n.clues)?[...new Set(n.clues.filter(id=>['rain','whistle','train'].includes(id)))]:[];
  n.sequence=Array.isArray(n.sequence)&&n.sequence.length<3?[...new Set(n.sequence.filter(id=>['rain','whistle','train'].includes(id)))]:[];
  const p={...freshNight3(),...s.night3};p.witnesses=Array.isArray(p.witnesses)?[...new Set(p.witnesses.filter(id=>['keeper','machine','cat'].includes(id)))]:[];
@@ -38,10 +40,18 @@ function normaliseSave(s){if(s&&typeof s==='object'&&[0,1,2,3,4,5,6,7,8,9,10].in
  const d={...freshDay4(),...s.day4};d.photos=Array.isArray(d.photos)?[...new Set(d.photos.filter(id=>['sea','meal','light'].includes(id)))]:[];
  d.mirrors=Array.from({length:3},(_,i)=>Array.isArray(d.mirrors)&&[0,1].includes(d.mirrors[i])?d.mirrors[i]:freshDay4().mirrors[i]);
  const f={...freshNight5(),...s.night5};f.route=fifthStory.normaliseRoute(f.route);f.guestChoice=['quiet','listen'].includes(f.guestChoice)?f.guestChoice:null;
- const chapter=[2,3,4,5].includes(s.chapter)?s.chapter:1,room=chapter===5?([0,1,9,10].includes(s.room)?s.room:0):chapter===4?([6,7,8].includes(s.room)?s.room:6):Math.min(s.room,chapter===1?1:chapter===2?3:5);
- const history=Array.isArray(s.history)?s.history.filter(e=>e&&typeof e.speaker==='string'&&typeof e.text==='string').slice(-80).map(e=>({speaker:e.speaker.slice(0,100),text:e.text.slice(0,2000),chapter:[1,2,3,4,5].includes(e.chapter)?e.chapter:chapter})):[];
+ const j=freshJourney2(),raw=s.journey2||{};
+ for(const key of ['six','seven','eight']){const value=raw[key];if(value&&typeof value==='object')for(const flag of Object.keys(j[key]))if(typeof j[key][flag]==='boolean')j[key][flag]=value[flag]===true;}
+ j.six.clues=Array.isArray(raw.six?.clues)?[...new Set(raw.six.clues.filter(id=>['parcel','manifest','receiver'].includes(id)))]:[];
+ j.six.route=Array.from({length:3},(_,i)=>['hold','return','trace'].includes(raw.six?.route?.[i])?raw.six.route[i]:null);
+ j.six.choice=['public','private'].includes(raw.six?.choice)?raw.six.choice:null;
+ j.seven.evidence=Array.isArray(raw.seven?.evidence)?[...new Set(raw.seven.evidence.filter(id=>['return-log','witness'].includes(id)))]:[];
+ j.seven.choice=['square','letters'].includes(raw.seven?.choice)?raw.seven.choice:null;
+ j.eight.policy=['local','shared'].includes(raw.eight?.policy)?raw.eight.policy:null;
+ const chapter=[2,3,4,5,6,7,8].includes(s.chapter)?s.chapter:1,room=chapter>=6?(([chapter*2-1,chapter*2].includes(s.room))?s.room:chapter*2-1):chapter===5?([0,1,9,10].includes(s.room)?s.room:0):chapter===4?([6,7,8].includes(s.room)?s.room:6):Math.min(s.room,chapter===1?1:chapter===2?3:5);
+ const history=Array.isArray(s.history)?s.history.filter(e=>e&&typeof e.speaker==='string'&&typeof e.text==='string').slice(-80).map(e=>({speaker:e.speaker.slice(0,100),text:e.text.slice(0,2000),chapter:[1,2,3,4,5,6,7,8].includes(e.chapter)?e.chapter:chapter})):[];
  for(const [obj,defaults] of [[n,freshNight2()],[p,freshNight3()],[d,freshDay4()],[f,freshNight5()]])for(const key of Object.keys(defaults))if(typeof defaults[key]==='boolean')obj[key]=obj[key]===true;
- return {...fresh(),...s,chapter,room,night2:n,night3:p,day4:d,night5:f,history,x:Math.max(29,Math.min(449,s.x)),y:Math.max(floorY(room),Math.min(270,s.y))};
+ return {...fresh(),...s,chapter,room,night2:n,night3:p,day4:d,night5:f,journey2:j,history,x:Math.max(29,Math.min(449,s.x)),y:Math.max(floorY(room),Math.min(270,s.y))};
 }return null;}
 function readSave(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE)));}catch{return null;}}
 function readRestartBackup(){try{return normaliseSave(JSON.parse(localStorage.getItem(SAVE+'-before-restart')));}catch{return null;}}
@@ -53,13 +63,14 @@ $('run-toggle').onclick=()=>{runToggle=!runToggle;updateRunButton();canvas.focus
 function slotKey(index){return `${SAVE}-slot-${index}`;}
 function readSlot(index){try{const entry=JSON.parse(localStorage.getItem(slotKey(index)));const snapshot=normaliseSave(entry?.state);return snapshot?{...entry,state:snapshot}:null;}catch{return null;}}
 function saveSummary(snapshot){
- const places=['대합실','승강장','기록실','비 오는 기억','신호실','첫차 안','물결마을 항구','작은 식탁','등대 작업실','당직실','옥상 정원'];let progress;
- if(snapshot.chapter===5){const n=snapshot.night5;progress=n.ended?'첫 번째 여정 완료':n.ready?'백지 배웅하기':n.ticket?'백지의 승차권':n.served?'환승 시간표':n.guestChoice?'따뜻한 물 한 잔':'처음 온 손님';}
+ const places=['대합실','승강장','기록실','비 오는 기억','신호실','첫차 안','물결마을 항구','작은 식탁','등대 작업실','당직실','옥상 정원','밤 우편열차','끊어진 철교','유리도시 광장','반송 기록청','중앙 우편국','새벽의 연결교'];let progress;
+ if(snapshot.chapter>=6){const j=snapshot.journey2;progress=snapshot.chapter===6?(j.six.ended?'도시행 첫 정차 완료':j.six.aligned?'도시로 출발':`우편 분류 ${j.six.route.filter(Boolean).length} / 3`):snapshot.chapter===7?(j.seven.ended?'도시의 응답 완료':j.seven.proven?'응답 모으기':`반송 증거 ${j.seven.evidence.length} / 2`):(j.eight.ended?'두 번째 여정 완료':j.eight.policy?'새벽의 출발 신호':j.eight.live?'새 운행 약속':j.eight.heard?'현재의 응답 확인':'음성 원본');}
+ else if(snapshot.chapter===5){const n=snapshot.night5;progress=n.ended?'첫 번째 여정 완료':n.ready?'백지 배웅하기':n.ticket?'백지의 승차권':n.served?'환승 시간표':n.guestChoice?'따뜻한 물 한 잔':'처음 온 손님';}
  else if(snapshot.chapter===4){const n=snapshot.day4;progress=n.ended?'바닷가 이야기 완료':n.reunited?'03호에게 엽서 보내기':n.lit?'여울과 나루의 이야기':n.met?'등대 빛길 퍼즐':n.letter?'나루를 만나러':n.notice?'반송된 편지':'마을에 도착';}
  else if(snapshot.chapter===3){const n=snapshot.night3;progress=n.ended?'첫 번째 아침':n.announced?'첫차에 오르기':n.signalDone?'새 안내 방송':n.inspector?`신호 연결 ${n.signals.filter(Boolean).length} / 3`:n.board?`다음 이야기 ${n.witnesses.length} / 3`:'사라진 역 이름';}
  else if(snapshot.chapter===2){const n=snapshot.night2;progress=n.ended?'두 번째 밤 완료':n.catName?'편지의 받는 사람':n.remembered?'고양이의 이름':n.tuned?'기억 속의 아이':n.met?`소리 단서 ${n.clues.length} / 3`:'새로 도착한 편지';}
  else progress=snapshot.ended?'첫 번째 밤 완료':snapshot.bell?'방울을 찾은 뒤':snapshot.cat?'벤치의 단서':snapshot.ticket?'내일행 표를 받은 뒤':snapshot.met?'역무원의 부탁':'첫 만남 전';
- return `${['첫 번째 밤','두 번째 밤','세 번째 밤','바닷가 이야기','마지막 이야기'][snapshot.chapter-1]} · ${places[snapshot.room]} · ${progress}`;
+ return `${['첫 번째 밤','두 번째 밤','세 번째 밤','바닷가 이야기','다섯 번째 이야기','지도에 없는 0번선','반송된 도시','마지막 수취인'][snapshot.chapter-1]} · ${places[snapshot.room]} · ${progress}`;
 }
 function formatSavedAt(value){const date=new Date(value);return Number.isNaN(date.getTime())?'이전 버전의 저장':date.toLocaleString('ko-KR',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 function storeSlot(index){
@@ -104,8 +115,10 @@ $('save-button').onclick=()=>openSaveMenu('save');$('load-button').onclick=()=>o
 $('close-save-menu').onclick=()=>$('save-menu').close();
 $('save-menu').addEventListener('close',()=>{keys.clear();if(active)canvas.focus({preventScroll:true});});
 function currentTask(){
+ if(state.chapter>=6)return secondJourney.task();
+ if(nextChapter()===6)return {step:'두 번째 여정',title:'지도에 없는 0번선',detail:'존재하지 않는 역이라는 이유로 편지가 돌아왔어요. 「2부 · 0번선 시작」에서 밤 우편열차에 오르세요. 첫 여정의 후일담을 더 읽어도 괜찮아요.'};
  if(state.chapter===5)return fifthStory.task();
- if(nextChapter()===5)return {step:'마지막 이야기',title:'문을 닫는 사람 · 역으로',detail:'백지의 휴가 신청서에 아직 빈칸이 남았어요. 「마지막 이야기 시작」을 눌러 우리 역으로 돌아가세요.'};
+ if(nextChapter()===5)return {step:'다섯 번째 이야기',title:'문을 닫는 사람 · 역으로',detail:'백지의 휴가 신청서에 아직 빈칸이 남았어요. 「다섯 번째 이야기 시작」을 눌러 우리 역으로 돌아가세요.'};
  if(state.chapter===4)return fourthDay.task();
  if(nextChapter()===4)return {step:'다음 이야기',title:'약속의 다른 쪽 · 바닷가로',detail:'첫차가 물결마을에 도착해요. 「바닷가 이야기 시작」을 누르면 여울의 약속을 따라갈 수 있어요. 열차 안을 더 둘러봐도 괜찮아요.'};
  if(state.chapter===3)return thirdNight.task();
@@ -125,12 +138,12 @@ function currentTask(){
  return task;
 }
 function objective(){
- const task=currentTask(),station=state.chapter>=3?thirdNight.stationName():'내일역';$('location').textContent=`${state.room===3?'오래전':stationTime()} · ${[`${station} 대합실`,'2번 승강장','잊힌 소리 기록실','비가 내리던 역','신호실','첫차 안','물결마을 항구','작은 식탁','등대 작업실','당직실','옥상 정원'][state.room]}`;
+ const task=currentTask(),station=state.chapter>=3?thirdNight.stationName():'내일역';$('location').textContent=`${state.room===3?'오래전':stationTime()} · ${[`${station} 대합실`,'2번 승강장','잊힌 소리 기록실','비가 내리던 역','신호실','첫차 안','물결마을 항구','작은 식탁','등대 작업실','당직실','옥상 정원','밤 우편열차','끊어진 철교','유리도시 광장','반송 기록청','중앙 우편국','새벽의 연결교'][state.room]}`;
  $('objective').textContent=task.title;$('guide').hidden=!active;$('guide-step').textContent=task.step;$('guide-title').textContent=task.title;
- $('guide-detail').textContent=task.detail+((state.chapter===5?state.night5.ended:state.chapter===4?state.day4.ended:state.chapter===3?state.night3.ended:state.chapter===2?state.night2.ended:state.ended)?'':' 가까이서 E / Enter · 대화는 끝까지 읽어주세요.');
+ $('guide-detail').textContent=task.detail+((state.chapter>=6?state.journey2[state.chapter===6?'six':state.chapter===7?'seven':'eight'].ended:state.chapter===5?state.night5.ended:state.chapter===4?state.day4.ended:state.chapter===3?state.night3.ended:state.chapter===2?state.night2.ended:state.ended)?'':' 가까이서 E / Enter · 대화는 끝까지 읽어주세요.');
  $('next-night').hidden=!(active&&nextChapter());$('next-night').textContent=nextChapterLabel();
- $('chapter-label').textContent=['01 / 기억이 머무는 역','02 / 받는 이 없는 편지','03 / 첫차가 오는 방법','04 / 약속의 다른 쪽','05 / 문을 닫는 사람'][state.chapter-1];
- $('save-button').disabled=!active;$('review-journey').hidden=!(active&&state.chapter===5&&state.night5.ended);
+ $('chapter-label').textContent=['01 / 기억이 머무는 역','02 / 받는 이 없는 편지','03 / 첫차가 오는 방법','04 / 약속의 다른 쪽','05 / 문을 닫는 사람','06 / 지도에 없는 0번선','07 / 반송된 도시','08 / 마지막 수취인'][state.chapter-1];
+ $('save-button').disabled=!active;$('review-journey').hidden=!(active&&state.chapter>=5&&state.night5.ended);
 }
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3000);}
 function tone(freq,duration=.4,volume=.025){if(!sound||!audio)return;const o=audio.createOscillator(),v=audio.createGain();o.type='sine';o.frequency.value=freq;v.gain.setValueAtTime(0,audio.currentTime);v.gain.linearRampToValueAtTime(volume,audio.currentTime+.025);v.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);o.connect(v);v.connect(audio.destination);o.start();o.stop(audio.currentTime+duration);}
@@ -145,7 +158,7 @@ $('previous').onclick=()=>{if(conversation&&conversation.index>0){conversation.i
 $('interaction').onclick=interact;
 function closest(){let result=null,best=Infinity;for(const e of roomEntities()){const d=Math.hypot(e.x-state.x,e.y-state.y);if(d<e.radius&&d<best){best=d;result=e;}}return result;}
 function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conversation){advance();return;}const e=closest();if(!e){toast('조금 더 가까이 다가가 보세요.');return;}
- if(fifthStory.handle(e.id)||fourthDay.handle(e.id)||thirdNight.handle(e.id)||secondNight.handle(e.id))return;
+ if(secondJourney.handle(e.id)||fifthStory.handle(e.id)||fourthDay.handle(e.id)||thirdNight.handle(e.id)||secondNight.handle(e.id))return;
  switch(e.id){
  case 'keeper':
   if(!state.met)speak('역무원 · 여울',[
@@ -203,7 +216,7 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  case 'clock':speak('멈춘 시계',['시계는 12시 7분을 가리키고 있다.','고장 난 것 같지는 않다.\n누군가 한 문장을 끝내기를 기다리는 것 같다.']);break;
  }
 }
-function showEnding({eyebrow,title,body,next}){window.tomorrowMetrics?.track('chapter_complete',{chapter:state.chapter});clearTimeout(toastTimer);$('toast').classList.remove('show');$('end-eyebrow').textContent=eyebrow;$('end-title').textContent=title;$('end-text').textContent=body;$('end-next-night').hidden=!next;$('end-next-night').textContent=nextChapterLabel();$('return').textContent=state.chapter===4?'마을에 조금 더 머무르기 →':state.room===5?'열차에 조금 더 머무르기 →':'역에 조금 더 머무르기 →';$('credits-button').hidden=!(state.chapter===5&&state.night5.ended);$('ending').hidden=false;}
+function showEnding({eyebrow,title,body,next}){window.tomorrowMetrics?.track('chapter_complete',{chapter:state.chapter});clearTimeout(toastTimer);$('toast').classList.remove('show');$('end-eyebrow').textContent=eyebrow;$('end-title').textContent=title;$('end-text').textContent=body;$('end-next-night').hidden=!next;$('end-next-night').textContent=nextChapterLabel();$('return').textContent=state.chapter>=6?'이곳에 조금 더 머무르기 →':state.chapter===4?'마을에 조금 더 머무르기 →':state.room===5?'열차에 조금 더 머무르기 →':'역에 조금 더 머무르기 →';$('credits-button').hidden=!(state.chapter===5&&state.night5.ended||state.chapter===8&&state.journey2.eight.ended);$('ending').hidden=false;}
 function finish(choice){state.choice=choice;speak('역무원 · 여울',choice==='carry'?[
    "여울은 방울을 주머니에 넣었다.\n“찾으러 갈게요. 이번엔 제가.”",
    "“그리고 당신 건… 없어진 게 아니에요.”\n여울은 잠긴 서랍을 바라봤다.",
@@ -215,9 +228,9 @@ function finish(choice){state.choice=choice;speak('역무원 · 여울',choice==
  ],()=>{state.ended=true;save();objective();showEnding({eyebrow:'END OF THE FIRST NIGHT',title:choice==='carry'?'기다림을 데리고':'돌아올 자리',body:(choice==='carry'?'여울은 방울을 다시 숨기지 않았다.':'문 위에 방울이 걸렸다. 이제 숨길 곳이 아니었다.')+'\n\n자판기가 마지막으로 출력한 종이가 주머니에서 펼쳐졌다.\n「이름 보관 신청 / 신청인: 본인」\n\n맨 아래에는 당신의 글씨가 있었다.\n“나를 찾으러 오면, 없다고 해주세요.”',next:true});tone(523,2);});}
 function begin(resume){if(!resume){const previous=active?state:readSave();if(previous){try{localStorage.setItem(SAVE+'-before-restart',JSON.stringify({...previous,savedAt:new Date().toISOString()}));}catch{$('save-status').textContent='이전 진행을 보관하지 못했어요. 저장 파일을 내보낸 뒤 다시 시작해주세요.';toast('이전 진행을 보관하지 못해 새 게임을 시작하지 않았어요.');return;}}}state=resume?(readSave()||fresh()):fresh();active=true;$('start').hidden=true;$('ending').hidden=true;closeDialogue();objective();canvas.focus({preventScroll:true});window.tomorrowMetrics?.track(resume?'game_resume':'game_start',{chapter:state.chapter});if(!resume){save();window.tomorrowMetrics?.track('chapter_start',{chapter:1});toast(readRestartBackup()?'이전 진행은 불러오기 메뉴에 보관했어요. 첫 밤부터 다시 시작합니다.':'방향키로 걷고, 가까이서 E를 눌러보세요.');}}
 $('begin').onclick=()=>begin(false);$('continue').onclick=()=>begin(true);$('return').onclick=()=>{$('ending').hidden=true;canvas.focus({preventScroll:true});};$('restart').onclick=()=>{begin(false);save();};
-$('next-night').onclick=$('end-next-night').onclick=()=>{const next=nextChapter();if(!next)return;$('ending').hidden=true;closeDialogue();if(next===5)fifthStory.start();else if(next===4)fourthDay.start();else if(next===3)thirdNight.start();else secondNight.start();window.tomorrowMetrics?.track('chapter_start',{chapter:state.chapter});};
+$('next-night').onclick=$('end-next-night').onclick=()=>{const next=nextChapter();if(!next)return;$('ending').hidden=true;closeDialogue();if(next>=6)secondJourney.start(next);else if(next===5)fifthStory.start();else if(next===4)fourthDay.start();else if(next===3)thirdNight.start();else secondNight.start();window.tomorrowMetrics?.track('chapter_start',{chapter:state.chapter});};
 $('journal-button').onclick=()=>{keys.clear();$('journal-content').replaceChildren();let notes;
- if(state.chapter===5)notes=fifthStory.journal();else if(state.chapter===4)notes=fourthDay.journal();else if(state.chapter===3)notes=thirdNight.journal();else if(state.chapter===2)notes=secondNight.journal();else{notes=[!state.met?'나는 이름을 기억하지 못한다. 우선 역무원에게 말을 걸자.':'여울은 처음 보는 나에게 “이번에도” 방울을 찾아달라고 했다.'];if(state.ticket)notes.push('영수증: 방울은 어제 여울에게 반납됐다. 내일행 표와 함께 승강장 고양이에게 보여주자.');if(state.cat)notes.push('고양이는 여울이 방울을 다시 숨기는 것을 봤다. 왼쪽 벤치 아래를 확인하자.');if(state.bell)notes.push('방울 속의 나루는 도착하면 편지하겠다고 했다. 여울에게 영수증과 함께 돌려주자.');if(state.ended)notes.push(state.choice==='carry'?'첫 번째 밤: 기다림을 데리고.':'첫 번째 밤: 돌아올 자리.');}
+ if(state.chapter>=6)notes=secondJourney.journal();else if(state.chapter===5)notes=fifthStory.journal();else if(state.chapter===4)notes=fourthDay.journal();else if(state.chapter===3)notes=thirdNight.journal();else if(state.chapter===2)notes=secondNight.journal();else{notes=[!state.met?'나는 이름을 기억하지 못한다. 우선 역무원에게 말을 걸자.':'여울은 처음 보는 나에게 “이번에도” 방울을 찾아달라고 했다.'];if(state.ticket)notes.push('영수증: 방울은 어제 여울에게 반납됐다. 내일행 표와 함께 승강장 고양이에게 보여주자.');if(state.cat)notes.push('고양이는 여울이 방울을 다시 숨기는 것을 봤다. 왼쪽 벤치 아래를 확인하자.');if(state.bell)notes.push('방울 속의 나루는 도착하면 편지하겠다고 했다. 여울에게 영수증과 함께 돌려주자.');if(state.ended)notes.push(state.choice==='carry'?'첫 번째 밤: 기다림을 데리고.':'첫 번째 밤: 돌아올 자리.');}
  comfort.showJournal(notes);};$('close-journal').onclick=()=>{$('journal').close();canvas.focus({preventScroll:true});};
 window.addEventListener('keydown',e=>{if(modalOpen())return;if(e.target instanceof HTMLElement&&e.target.closest('button')&&['Enter',' '].includes(e.key))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].includes(e.key)&&active)e.preventDefault();if(e.key==='Escape'){closeDialogue();keys.clear();return;}if(['e','E','Enter',' '].includes(e.key)&&!e.repeat){interact();return;}keys.add(e.key.toLowerCase());});window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();if(active)save();});document.addEventListener('visibilitychange',()=>{keys.clear();if(active)save();if(audio){if(document.hidden)audio.suspend();else if(sound)audio.resume();}});
 for(const b of document.querySelectorAll('[data-dir]')){const k={up:'arrowup',down:'arrowdown',left:'arrowleft',right:'arrowright'}[b.dataset.dir];b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(k);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys.delete(k);}$('touch-action').onclick=interact;
@@ -257,9 +270,9 @@ function drawPlatform(){const evening=state.chapter===5;rect(0,0,W,H,evening?'#6
  for(const x of [55,407]){rect(x,88,4,93,'#243e4a');rect(x-10,84,24,4,'#a2b3a5');rect(x-7,88,18,3,'#e4d3a0');glow(x+2,118,66,'#eddaa12a');}rect(231,77,7,61,'#2d424b');rect(220,91,31,27,'#7e928b');rect(223,94,25,21,'#233946');if(!(state.chapter===3&&state.night3.announced))text(stationTime(),236,107,'#dcd5a9',7,'center');bench(123,188);if(state.cat&&!state.bell){rect(117,195,4,3,'#ead493');glow(119,195,12,'#f3d77b55');}
  if(!(state.chapter===3&&state.night3.ended)){rect(339,174,19,5,'#1a2c35');rect(341,168,15,8,'#b4bfad');rect(349,160,9,10,'#c7cfb6');rect(349,158,3,4,'#c7cfb6');rect(356,158,3,4,'#c7cfb6');rect(351,164,1,2,'#263442');rect(356,164,1,2,'#263442');rect(337,166+Math.sin(time*2),6,3,'#b4bfad');}text('잠시 쉬어 가도 괜찮아요.',240,221,'#cad9d0',7,'center');rect(209,271,63,6,'#a3b29a');text('↓ 대합실로',240,263,'#edf1da',7,'center');thirdNight.drawPlatformExtras();fifthStory.platformExtras();}
 const obstacles=[[{x:65,y:93,w:52,h:68},{x:307,y:125,w:86,h:47},{x:409,y:119,w:31,h:42},{x:129,y:164,w:69,h:36},{x:314,y:183,w:69,h:36}],[{x:91,y:164,w:67,h:35},{x:339,y:156,w:23,h:24}]];
-function allowed(x,y){const blocks=fifthStory.obstacles[state.room]||fourthDay.obstacles[state.room]||thirdNight.obstacles[state.room]||secondNight.obstacles[state.room]||obstacles[state.room];return x>=29&&x<=449&&y>=floorY(state.room)&&y<=270&&!blocks.some(o=>x>o.x-5&&x<o.x+o.w+5&&y>o.y-1&&y<o.y+o.h+4);}
+function allowed(x,y){const blocks=secondJourney.obstacles[state.room]||fifthStory.obstacles[state.room]||fourthDay.obstacles[state.room]||thirdNight.obstacles[state.room]||secondNight.obstacles[state.room]||obstacles[state.room];return x>=29&&x<=449&&y>=floorY(state.room)&&y<=270&&!blocks.some(o=>x>o.x-5&&x<o.x+o.w+5&&y>o.y-1&&y<o.y+o.h+4);}
 function frame(ms){const dt=Math.min((ms-last)/1000,.035);last=ms;time=ms/1000;if(active&&!conversation&&$('ending').hidden&&!modalOpen()){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const n=Math.hypot(dx,dy)||1,speed=running()?RUN_SPEED:WALK_SPEED;dx=dx/n*speed*dt;dy=dy/n*speed*dt;if(allowed(state.x+dx,state.y))state.x+=dx;if(allowed(state.x,state.y+dy))state.y+=dy;}
- labelIndex=0;[drawLobby,drawPlatform,secondNight.drawArchive,()=>secondNight.drawMemory(time),()=>thirdNight.drawSignalRoom(time),()=>thirdNight.drawCarriage(time),()=>fourthDay.drawHarbor(time),()=>fourthDay.drawCafe(time),()=>fourthDay.drawLighthouse(time),fifthStory.drawOffice,()=>fifthStory.drawGarden(time)][state.room]();for(let i=labelIndex;i<worldLabels.length;i++)worldLabels[i].hidden=true;
+ labelIndex=0;[drawLobby,drawPlatform,secondNight.drawArchive,()=>secondNight.drawMemory(time),()=>thirdNight.drawSignalRoom(time),()=>thirdNight.drawCarriage(time),()=>fourthDay.drawHarbor(time),()=>fourthDay.drawCafe(time),()=>fourthDay.drawLighthouse(time),fifthStory.drawOffice,()=>fifthStory.drawGarden(time),...Array.from({length:6},(_,i)=>()=>secondJourney.draw(11+i,time))][state.room]();for(let i=labelIndex;i<worldLabels.length;i++)worldLabels[i].hidden=true;
  person(state.x,state.y);for(let i=0;i<18;i++){const x=(i*71+time*(i%3+1)*1.7)%480,y=60+(i*29+Math.sin(time+i)*5)%197;rect(x,y,1,1,'#d7d9b72e');}drawHints();
  const vignette=g.createRadialGradient(240,150,90,240,150,290);vignette.addColorStop(0,'transparent');vignette.addColorStop(1,'#07111e8a');g.fillStyle=vignette;g.fillRect(0,0,W,H);ctx.drawImage(surface,0,0,960,576);requestAnimationFrame(frame);}
 requestAnimationFrame(frame);window.addEventListener('beforeunload',()=>{if(active)save();});

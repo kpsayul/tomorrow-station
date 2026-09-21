@@ -11,7 +11,7 @@
  function track(name,details={}){
   if(!enabled||optedOut()||!['page_view','game_start','game_resume','chapter_start','chapter_complete','share'].includes(name))return;
   const parameters={entry_source:ledger.source};
-  if(Number.isInteger(details.chapter)&&details.chapter>=1&&details.chapter<=5)parameters.chapter=details.chapter;
+  if(Number.isInteger(details.chapter)&&details.chapter>=1&&details.chapter<=8)parameters.chapter=details.chapter;
   if(['copy_link','native','download_card'].includes(details.method))parameters.method=details.method;
   // Count each milestone once per tab session, including across save/reload.
   const key=name+':'+(parameters.chapter||'');

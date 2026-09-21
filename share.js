@@ -12,8 +12,8 @@ window.createGameSharing=function(api){
   const text=(value,x,y,size,color='#edf0e5',weight=500)=>{ctx.fillStyle=color;ctx.font=`${weight} ${size}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;ctx.fillText(value,x,y);};
   text('NIGHT PLATFORM',64,91,18,'#c5dfb9',700);
   text('내일 분실물',60,193,60,'#f1efdf',700);text('보관소',60,269,60,'#f1efdf',700);
-  const lines=s.ended?(s.choice==='carry'?['나는 기다리던 마음과 함께','한 걸음 나아가기로 했다.']:['나는 누군가 돌아올','자리를 남겼다.']):['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.'];
-  text(lines[0],64,354,30);text(lines[1],64,400,30);text(s.ended?'너라면 어떤 선택을 할까?':'다섯 이야기 · 열한 공간 · 당신의 선택',64,459,22,'#bdcfc6');
+  const lines=s.journey2?.eight.ended?(s.journey2.eight.policy==='local'?['나는 열일곱 역에','다시 정할 권한을 나누었다.']:['나는 서로 확인하며','다시 출발하기로 했다.']):s.chapter>=6?['지도에서 지워진 도시에도','기다리는 사람이 있었다.']:s.ended?(s.choice==='carry'?['나는 기다리던 마음과 함께','한 걸음 나아가기로 했다.']:['나는 누군가 돌아올','자리를 남겼다.']):['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.'];
+  text(lines[0],64,354,30);text(lines[1],64,400,30);text(s.ended?'너라면 어떤 선택을 할까?':'여덟 이야기 · 열일곱 공간 · 당신의 선택',64,459,22,'#bdcfc6');
   fill(64,509,270,49,'#c5dfb9');text('무료 · 설치 없이 바로 플레이',79,541,18,'#24352f',700);
   text('kpsayul.github.io/tomorrow-station',64,586,18,'#aabebb');
   message=s.ended?lines.join(' ')+' 너라면 어떤 선택을 할까?':pitch;

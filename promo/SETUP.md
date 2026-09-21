@@ -17,7 +17,7 @@
 | `page_view` | 게임 페이지 열기 (새로고침 포함) |
 | `game_start` | 처음부터 플레이 시작 |
 | `game_resume` | 이어 하기 또는 저장 불러오기 |
-| `chapter_start` | 각 이야기 새로 시작 (`chapter`: 1~5) |
+| `chapter_start` | 각 이야기 새로 시작 (`chapter`: 1~8) |
 | `chapter_complete` | 마지막 대화까지 읽고 해당 이야기 완료 |
 | `share` | 링크 복사·공유 창 완료·결과 이미지 저장 (`method`) |
 

@@ -23,7 +23,7 @@ if(!['localhost','127.0.0.1'].includes(new URL(gameSite).hostname))throw Error('
     const left=compact?48:64;tx('NIGHT PLATFORM',left,compact?68:92,compact?15:18,'#c5dfb9');tx('내일 분실물',left,compact?151:221,compact?48:70);tx('보관소',left,compact?216:309,compact?48:70);
     tx('이름을 잃어버린 당신이,',left,compact?289:382,compact?21:28,'#d2dfd6',500);tx('다른 사람들의 분실물을 찾는 밤.',left,compact?325:427,compact?21:28,'#d2dfd6',500);
     x.fillStyle='#c5dfb9';x.fillRect(left,compact?367:481,compact?288:354,48);tx('무료 · 설치·가입 없이 바로 플레이',left+15,compact?397:512,compact?17:21,'#23392e',700);
-    tx('다섯 이야기 · 작은 퍼즐 · 당신의 선택',left,compact?453:572,compact?16:20,'#b2c8bd',500);return c.toDataURL('image/png').split(',')[1];
+    tx('여덟 이야기 · 작은 퍼즐 · 당신의 선택',left,compact?453:572,compact?16:20,'#b2c8bd',500);return c.toDataURL('image/png').split(',')[1];
    }return {og:cover(1200,630),itch:cover(630,500)};
   });
   fs.writeFileSync(path.join(media,'og-cover.png'),Buffer.from(covers.og,'base64'));fs.writeFileSync(path.join(media,'itch-cover.png'),Buffer.from(covers.itch,'base64'));
@@ -47,7 +47,7 @@ if(!['localhost','127.0.0.1'].includes(new URL(gameSite).hostname))throw Error('
     text(titles[0],48,207,44);text(titles[1],48,269,44);
     ctx.imageSmoothingEnabled=false;ctx.drawImage(document.getElementById('game'),48,330,624,374);ctx.strokeStyle='#8ca18d';ctx.strokeRect(48,330,624,374);
     ctx.fillStyle='#1d333e';ctx.fillRect(48,744,624,209);
-    const lines=phase===0?['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.']:phase===1?['“왜 그렇게 봐?','너도 말하잖아.”']:phase===2?['“아무것도 잃어버리지 않았는데','들어와도 되나요?”']:['다섯 이야기와 작은 퍼즐.','그 끝에 남는, 당신의 선택.'];
+    const lines=phase===0?['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.']:phase===1?['“왜 그렇게 봐?','너도 말하잖아.”']:phase===2?['“이름을 맡기면,','다 잊나요?”']:['여덟 이야기와 작은 퍼즐.','그 끝에 남는, 당신의 선택.'];
     text(phase===1?'고양이':phase===2?'처음 온 손님':'내일 분실물 보관소',72,790,19,'#c5dfb9');for(let i=0;i<lines.length;i++)text(lines[i],72,849+i*46,29,'#eff2e8',500);
     ctx.fillStyle='#c5dfb9';ctx.fillRect(48,1010,624,67);text(phase===3?'무료로 바로 플레이 →':'설치·가입 없이 즐기는 한국어 이야기',72,1054,25,'#20372e',700);
     text('kpsayul.github.io/tomorrow-station',48,1145,23,'#c8d8cb',500);text('소리를 켜도, 조용히 읽어도 괜찮아요.',48,1190,19,'#91aaa4',400);

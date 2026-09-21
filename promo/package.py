@@ -3,7 +3,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 root = Path(__file__).resolve().parent.parent
-game_files = ['index.html', 'style.css', 'favicon.svg', 'privacy.html', 'analytics-config.js', 'analytics.js', 'share.js', 'game-ui.js', 'game.js', 'chapter-two.js', 'chapter-three.js', 'chapter-four.js', 'chapter-five.js']
+game_files = ['index.html', 'style.css', 'favicon.svg', 'privacy.html', 'analytics-config.js', 'analytics.js', 'share.js', 'game-ui.js', 'game.js', 'chapter-two.js', 'chapter-three.js', 'chapter-four.js', 'chapter-five.js', 'second-journey.js']
 promo_files = ['og-cover.png', 'itch-cover.png', 'scene-station.png', 'scene-talking-cat.png', 'scene-rooftop.png', 'tomorrow-station-15s.mp4']
 
 with ZipFile(root / 'media/tomorrow-station-itch.zip', 'w', ZIP_DEFLATED) as archive:

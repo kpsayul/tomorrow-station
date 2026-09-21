@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111a29">
   <title>내일 분실물 보관소 — 무료 한국어 스토리 게임</title>
-  <meta name="description" content="이름을 잃어버린 당신이, 다른 사람들의 분실물을 찾아주는 한밤의 역. 다섯 이야기와 작은 퍼즐을 설치·가입 없이 즐기는 무료 한국어 웹게임.">
+  <meta name="description" content="이름을 잃어버린 당신이, 다른 사람들의 분실물을 찾아주는 한밤의 역. 여덟 이야기와 작은 퍼즐을 설치·가입 없이 즐기는 무료 한국어 웹게임.">
   <link rel="canonical" href="https://kpsayul.github.io/tomorrow-station/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ko_KR">
@@ -26,7 +26,7 @@
 </head>
 <body>
   <main class="shell">
-    <header><a class="brand" href="./">NIGHT PLATFORM <span>작은 이야기 · 01</span></a><button id="sound" class="quiet" aria-pressed="false">소리 켜기 ♫</button></header>
+    <header><a class="brand" href="./">NIGHT PLATFORM <span>두 번의 여정 · 08</span></a><button id="sound" class="quiet" aria-pressed="false">소리 켜기 ♫</button></header>
     <section class="heading"><div><p class="eyebrow">SOME THINGS WAIT FOR YOU.</p><h1>내일 분실물 보관소<span>THE LOST & FOUND OF TOMORROW</span></h1></div><p class="intro">마지막 열차가 떠나고,<br>두고 간 마음들이 깨어나는 시간.</p></section>
     <div class="play-layout">
     <div class="stage-column">
@@ -39,7 +39,7 @@
       <div class="scene-label"><span class="dot"></span><span id="location">00:07 · 내일역 대합실</span></div>
       <div id="objective" class="objective">작은 이야기가 당신을 기다립니다</div>
       </div>
-      <div id="start" class="veil"><div class="start-card"><p class="eyebrow">A SHORT WALK AFTER MIDNIGHT</p><h2>어제 돌려준<br>방울이었다.</h2><p>역무원은 다시 찾아달라고 했다.<br>왜 거짓말을 하는 걸까.</p><button id="begin" class="primary">첫 번째 밤 시작하기 <span>→</span></button><button id="continue" class="quiet" hidden>이어 하기</button><small>무료 · 설치·가입 없이 플레이<br>다섯 이야기 · 작은 퍼즐 · 자동 저장</small></div></div>
+      <div id="start" class="veil"><div class="start-card"><p class="eyebrow">A SHORT WALK AFTER MIDNIGHT</p><h2>어제 돌려준<br>방울이었다.</h2><p>역무원은 다시 찾아달라고 했다.<br>왜 거짓말을 하는 걸까.</p><button id="begin" class="primary">첫 번째 밤 시작하기 <span>→</span></button><button id="continue" class="quiet" hidden>이어 하기</button><small>무료 · 설치·가입 없이 플레이<br>여덟 이야기 · 작은 퍼즐 · 자동 저장</small></div></div>
       <div id="dialogue" class="dialogue" hidden role="region" aria-label="대화"><div class="dialogue-head"><canvas id="portrait" width="32" height="32" aria-hidden="true"></canvas><span id="speaker"></span><span id="page"></span></div><p id="line" aria-live="polite"></p><div id="choices"></div><div class="dialogue-actions"><button id="previous" class="quiet" disabled>← 이전 대사</button><button id="next" class="next">계속 <span>↵</span></button></div></div>
       <div id="ending" class="veil" hidden><div class="start-card"><p id="end-eyebrow" class="eyebrow">END OF THE FIRST NIGHT</p><h2 id="end-title"></h2><p id="end-text"></p><button id="end-next-night" class="primary" hidden>두 번째 밤 시작 →</button><button id="return" class="primary">역에 조금 더 머무르기 →</button><button id="credits-button" class="quiet" hidden>여정 돌아보기</button><button id="share-ending" class="quiet">내 선택 공유하기 ↗</button><button id="restart" class="quiet">처음부터 다시 걷기</button></div></div>
       <div id="toast" role="status"></div>
@@ -60,7 +60,7 @@
   </main>
   <dialog id="journal" aria-labelledby="journal-title"><p class="eyebrow">NOTES IN YOUR POCKET</p><h2 id="journal-title">주머니 속 메모</h2><nav class="notebook-nav" aria-label="수첩 페이지"><button data-journal-tab="notes" aria-pressed="true">메모</button><button data-journal-tab="map" aria-pressed="false">지도</button><button data-journal-tab="history" aria-pressed="false">읽은 대화</button></nav><div id="journal-content"></div><button id="close-journal" class="primary">다시 걷기</button></dialog>
   <dialog id="save-menu" aria-labelledby="save-menu-title"><p class="eyebrow">A PLACE TO RETURN TO</p><h2 id="save-menu-title">이 순간 저장하기</h2><p id="save-menu-description" class="menu-description"></p><div id="save-slots"></div><p class="save-note">저장은 이 브라우저에 남아요. 대화 중이라면 완료한 진행까지 기록되고, 읽던 대화는 다시 시작할 수 있어요.</p><section class="save-transfer" aria-labelledby="transfer-title"><h3 id="transfer-title">다른 곳에서도 이어 걷기</h3><div class="transfer-actions"><button id="export-save" class="tool-button">현재 진행 내보내기</button><button id="import-save" class="tool-button">저장 파일 가져오기</button></div><input id="import-file" type="file" accept=".json,application/json" hidden><p id="import-status" class="save-note" role="status"></p><div id="import-preview" hidden><strong id="import-summary"></strong><small id="import-date"></small><button id="apply-import" class="primary">이 파일에서 이어 하기</button></div></section><button id="close-save-menu" class="quiet">닫기 · Esc</button></dialog>
-  <dialog id="credits" aria-labelledby="credits-title"><p class="eyebrow">THE FIRST JOURNEY, COMPLETE</p><h2 id="credits-title">당신이 남긴 자리</h2><p class="menu-description">방울 하나를 찾으러 시작한 밤이<br>누군가의 첫 휴가가 되었습니다.</p><div id="credits-choices"></div><p class="save-note">내일 분실물 보관소 · kpsayul<br>끝까지 걸어줘서 고마워요. 역에는 아직 작은 후일담이 남아 있어요.</p><button id="close-credits" class="primary">여정으로 돌아가기</button></dialog>
+  <dialog id="credits" aria-labelledby="credits-title"><p id="credits-eyebrow" class="eyebrow">THE FIRST JOURNEY, COMPLETE</p><h2 id="credits-title">당신이 남긴 자리</h2><p id="credits-description" class="menu-description">방울 하나를 찾으러 시작한 밤이<br>누군가의 첫 휴가가 되었습니다.</p><div id="credits-choices"></div><p class="save-note">내일 분실물 보관소 · kpsayul<br>끝까지 걸어줘서 고마워요. 역에는 아직 작은 후일담이 남아 있어요.</p><button id="close-credits" class="primary">여정으로 돌아가기</button></dialog>
   <dialog id="share-menu" aria-labelledby="share-title"><p class="eyebrow">LEAVE A LITTLE LIGHT FOR SOMEONE</p><h2 id="share-title">친구에게 보내는 한 장</h2><canvas id="share-card" width="1200" height="630" role="img" aria-label="내일 분실물 보관소 공유 카드"></canvas><p id="share-message" class="menu-description"></p><div class="transfer-actions"><button id="download-share-card" class="tool-button">카드 이미지 저장</button><button id="copy-share-link" class="tool-button">플레이 링크 복사</button><button id="native-share" class="tool-button" hidden>공유하기</button></div><label class="share-link-label" for="share-link">플레이 주소</label><input id="share-link" type="text" readonly><p id="share-status" class="save-note" role="status"></p><button id="close-share" class="primary">게임으로 돌아가기</button></dialog>
   <script src="analytics-config.js"></script>
   <script src="analytics.js"></script>
@@ -69,6 +69,7 @@
   <script src="chapter-three.js"></script>
   <script src="chapter-four.js"></script>
   <script src="chapter-five.js"></script>
+  <script src="second-journey.js"></script>
   <script src="game-ui.js"></script>
   <script src="game.js"></script>
 </body>
