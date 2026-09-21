@@ -150,7 +150,7 @@ function tone(freq,duration=.4,volume=.025){if(!sound||!audio)return;const o=aud
 function music(){const notes=[261.63,329.63,392,493.88,440,392,329.63,293.66,261.63,329.63,392,523.25,493.88,392,293.66,329.63];tone(notes[noteIndex++%notes.length],1.8,.018);if(noteIndex%4===1)tone(130.81,3,.016);}
 $('sound').onclick=async()=>{try{audio ||= new (window.AudioContext||window.webkitAudioContext)();await audio.resume();sound=!sound;$('sound').textContent=sound?'소리 끄기 ♫':'소리 켜기 ♫';$('sound').setAttribute('aria-pressed',String(sound));if(sound){music();musicTimer=setInterval(music,680);}else clearInterval(musicTimer);}catch{toast('이 브라우저에서는 소리를 켤 수 없어요.');}};
 function speak(speaker,lines,after=null,choices=null){keys.clear();conversation={speaker,lines,index:0,after,choices};$('dialogue').hidden=false;paintDialogue();tone(523,.1,.015);}
-function paintDialogue(){const d=conversation;comfort.remember(d);comfort.portrait(d.speaker);$('previous').disabled=d.index===0;$('speaker').textContent=d.speaker;$('line').textContent=d.lines[d.index];$('page').textContent=`${d.index+1} / ${d.lines.length}`;$('choices').replaceChildren();const choose=d.index===d.lines.length-1&&d.choices;$('next').hidden=!!choose;if(choose){for(const c of d.choices){const b=document.createElement('button');b.textContent=c.text;b.onclick=()=>{closeDialogue();c.action();};$('choices').append(b);}}}
+function paintDialogue(){const d=conversation,page=comfort.dialoguePage(d.speaker,d.lines[d.index]);comfort.remember(d,page);comfort.renderDialogue(page);$('previous').disabled=d.index===0;$('page').textContent=`${d.index+1} / ${d.lines.length}`;$('choices').replaceChildren();const choose=d.index===d.lines.length-1&&d.choices;$('next').hidden=!!choose;if(choose){for(const c of d.choices){const b=document.createElement('button');b.textContent=c.text;b.onclick=()=>{closeDialogue();c.action();};$('choices').append(b);}}}
 function closeDialogue(){conversation=null;$('dialogue').hidden=true;canvas.focus({preventScroll:true});}
 function advance(){if(!conversation)return;const d=conversation;if(d.index<d.lines.length-1){d.index++;paintDialogue();tone(392,.07,.01);}else if(!d.choices){closeDialogue();if(d.after)d.after();objective();save();}}
 $('next').onclick=advance;
@@ -174,7 +174,7 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
  ]);
   else if(!state.bell)speak('역무원 · 여울',[!state.ticket?'자판기에게 물어보세요.\n돈이 없다는 말부터 하면 삐치니까 조심하고요.':!state.cat?'표에 고양이 발자국이 있네요.\n승강장에 그 표의 주인이 있을 거예요.':'그 아이가 당신을 믿나 봐요.\n고양이가 가리킨 벤치를 살펴봤나요?']);
   else speak('역무원 · 여울',[
-   "당신은 방울과 영수증을 나란히 놓았다.\n“어제 돌려받으셨다면서요.”",
+   "이야기: 당신은 방울과 영수증을 나란히 놓았다.\n당신: 어제 돌려받으셨다면서요.",
    "“제가 다시 벤치에 뒀어요.”\n여울은 영수증의 자기 서명을 손으로 가렸다.",
    "“반납할 물건이 남아 있으면 역은 문을 안 닫아요.\n동생이 돌아왔을 때, 여기가 없어져 있으면…”",
    "“당신까지 기다리게 하면 안 됐는데.”\n여울이 방울을 밀어놓았다. “이제 이걸 어떻게 할까요?”"
@@ -215,8 +215,8 @@ function interact(){if(!active||!$('ending').hidden||modalOpen())return;if(conve
    "여울이 나루의 컵을 가져다 몇 번 불었다.\n나루는 기다리는 동안 언니 컵의 거품을 훔쳐 먹었다.",
    "나루: 언니 거가 더 맛있어.\n여울: 똑같은 거야.\n나루: 그럼 바꿔도 되겠네.",
    "두 사람의 웃음이 먼저 사라졌다.\n다음 목소리는 조금 더 자란 나루의 것이었다.",
-   "“언니, 내일은 바다 보러 가자.”\n“내일은 바빠. 다음에.”",
-   "“그럼 나 혼자 갈게. 도착하면 편지할게.”\n“나루야. 잠깐—”",
+   "나루: 언니, 내일은 바다 보러 가자.\n여울: 내일은 바빠. 다음에.",
+   "나루: 그럼 나 혼자 갈게. 도착하면 편지할게.\n여울: 나루야. 잠깐—",
    "목소리가 끊겼다. 방울의 종이 꼬리표에는\n반납 도장 위로 「분실」이 다시 찍혀 있었다."
  ],()=>{state.bell=true;tone(1046,1.8,.035);toast('「작은 방울」을 찾았습니다. 역무원에게 돌아가세요.');});break;
  case 'clock':speak('멈춘 시계',['시계는 12시 7분을 가리키고 있다.','고장 난 것 같지는 않다.\n누군가 한 문장을 끝내기를 기다리는 것 같다.']);break;

@@ -79,6 +79,11 @@ h1 span { display: block; font: 9px 'Noto Sans KR', sans-serif; letter-spacing: 
 #previous { min-height: 44px; padding-left: 0; font-size: 12px; }
 #page { font-size: 12px; color: #bbccc8; white-space: nowrap; }
 #line { font-size: clamp(16px, 1.3vw, 20px); line-height: 1.85; color: #f0f3e9; white-space: pre-line; overflow-wrap: anywhere; margin: 12px 0 8px; }
+#speaker { min-width: 0; overflow-wrap: anywhere; }
+.dialogue-turn, .dialogue-narration { display: block; }
+.dialogue-turn + .dialogue-turn, .dialogue-narration + .dialogue-turn, .dialogue-turn + .dialogue-narration { margin-top: 10px; }
+.dialogue-speaker { font-size: .8em; color: #e0eabf; }
+.dialogue-narration { color: #bdcbc9; font-size: .94em; }
 .next { display: block; margin-left: auto; background: transparent; color: #d1e0c6; font-size: 14px; padding: 8px; min-height: 40px; }
 .next span { margin-left: 8px; }
 #choices { display: flex; gap: 8px; flex-wrap: wrap; }

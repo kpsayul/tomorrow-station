@@ -22,9 +22,37 @@ window.createGameComfort=function(api){
  }
  for(const button of document.querySelectorAll('[data-journal-tab]'))button.onclick=()=>{tab=button.dataset.journalTab;renderJournal();};
  function showJournal(currentNotes){notes=currentNotes;tab='notes';renderJournal();$('journal').showModal();}
- function remember(dialogue){if(dialogue.index<=(dialogue.recorded??-1))return;dialogue.recorded=dialogue.index;const history=api.state().history;history.push({speaker:dialogue.speaker,text:dialogue.lines[dialogue.index],chapter:api.state().chapter});if(history.length>80)history.splice(0,history.length-80);}
+ // Only authored speaker cues change the speaker. Quoted names and stage
+ // directions must never be used to guess who is speaking.
+ function dialoguePage(defaultSpeaker,line){
+  const state=api.state(),player=state.night2.remembered||state.chapter>=3?'온 · 주인공':'당신 · 주인공';
+  const names={'당신':player,'온':player,'당신의 답장':player+' · 답장','당신의 기록':player+' · 기록','당신의 엽서':player+' · 엽서','어제의 온':'온 · 어제의 메모','어린 온의 편지':'어린 온 · 편지','당신의 안내 방송':player+' · 안내 방송'};
+  const label=name=>names[name]||name;
+  const cue=/^(당신의 답장|당신의 기록|당신의 엽서|어린 온의 편지|어제의 온|어린 온|당신|온|여울|나루|후추|고양이|03호|백지|모래|이음|서린|결|연|담|손님|이야기):\s*(.*)$/;
+  const turns=[];let tagged=false;
+  for(const part of line.split('\n')){
+   const match=part.match(cue);
+   if(match){tagged=true;turns.push({speaker:label(match[1]),text:match[2],narration:match[1]==='이야기'});}
+   else if(turns.length)turns[turns.length-1].text+='\n'+part;
+   else turns.push({speaker:'이야기',text:part,narration:true});
+  }
+  if(!tagged)return {speaker:label(defaultSpeaker),portrait:label(defaultSpeaker),text:line,turns:null};
+  const speakers=[...new Set(turns.filter(t=>!t.narration).map(t=>t.speaker))];
+  return {speaker:speakers.join(' / ')||'이야기',portrait:speakers.length===1?speakers[0]:'이야기',turns,text:turns.map(t=>t.narration?t.text:`${t.speaker}: ${t.text}`).join('\n')};
+ }
+ function renderDialogue(page){
+  $('speaker').textContent=page.speaker;portrait(page.portrait);$('line').replaceChildren();
+  if(!page.turns){$('line').textContent=page.text;return;}
+  for(const turn of page.turns){
+   const block=document.createElement('span');block.className=turn.narration?'dialogue-narration':'dialogue-turn';
+   if(!turn.narration){const name=document.createElement('strong');name.className='dialogue-speaker';name.textContent=turn.speaker+'\n';block.append(name);}
+   const content=document.createElement('span');content.textContent=turn.text;block.append(content);$('line').append(block);
+  }
+ }
+ function remember(dialogue,page){if(dialogue.index<=(dialogue.recorded??-1))return;dialogue.recorded=dialogue.index;const history=api.state().history;history.push({speaker:page.speaker,text:page.text,chapter:api.state().chapter});if(history.length>80)history.splice(0,history.length-80);}
  function portrait(speaker){
   const ctx=$('portrait').getContext('2d'),r=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h);};ctx.clearRect(0,0,32,32);r(0,0,32,32,'#29414c');
+  if(speaker.includes('주인공')){r(8,23,17,9,'#c49b75');r(10,8,14,16,'#d7b99e');r(8,5,18,7,'#303643');r(8,10,4,8,'#303643');r(14,16,2,3,'#37434b');r(22,16,2,3,'#37434b');r(17,21,4,1,'#b08174');r(7,24,20,4,'#b55b5b');r(8,27,5,5,'#b55b5b');return;}
   if(/후추|고양이/.test(speaker)){r(7,12,19,14,'#d4d6b8');r(7,7,5,8,'#d4d6b8');r(21,7,5,8,'#d4d6b8');r(11,18,2,3,'#32434f');r(21,18,2,3,'#32434f');r(16,22,3,2,'#bc8d80');return;}
   if(/03호|자판기/.test(speaker)){r(6,4,21,26,'#a46b61');r(9,7,15,13,'#86aba4');r(11,11,3,3,'#324650');r(19,11,3,3,'#324650');r(10,24,13,3,'#2a424d');r(23,21,2,2,'#dfc590');return;}
   if(!/여울|백지|검표원|나루|모래|손님|당신|아이|이음|서린|배달원 결|우편소 · 결/.test(speaker)){r(9,7,15,21,'#c3c5a6');r(12,12,9,2,'#708d85');r(12,17,9,2,'#708d85');r(12,22,6,2,'#708d85');return;}
@@ -70,5 +98,5 @@ window.createGameComfort=function(api){
  };
  $('close-credits').onclick=()=>$('credits').close();
  $('credits').addEventListener('close',()=>api.canvas.focus({preventScroll:true}));
- return {showJournal,remember,portrait,transition,prepareSaveMenu,readBackup};
+ return {showJournal,dialoguePage,renderDialogue,remember,portrait,transition,prepareSaveMenu,readBackup};
 };
