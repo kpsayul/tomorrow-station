@@ -7,7 +7,9 @@ const fs=require('node:fs');
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},speak,interact,move,save,get dialogue(){return conversation}};requestAnimationFrame(frame);window.addEventListener')}));
-  await page.goto(process.env.GAME_URL||'http://localhost:8080/tomorrow-station/');await page.locator('#begin').click();
+  await page.goto(process.env.GAME_URL||'http://localhost:8080/tomorrow-station/');
+  await page.evaluate(()=>localStorage.setItem('tomorrow-station-v1',JSON.stringify({x:240,y:224,room:0})));
+  await page.reload();await page.locator('#continue').click();
   // Actual first-night question: the player speaks under their own identity,
   // without revealing the name before the memory scene.
   await page.evaluate(()=>{const t=window.__check;Object.assign(t.state,{met:true,bell:true});t.move(0,348,177);t.interact();});
@@ -15,7 +17,7 @@ const fs=require('node:fs');
   assert((await page.locator('.dialogue-turn').textContent()).includes('어제 돌려받으셨다면서요'));
   assert((await page.locator('.dialogue-narration').textContent()).includes('방울과 영수증'));
   const playerPortrait=await page.locator('#portrait').evaluate(canvas=>canvas.toDataURL());
-  await page.locator('#next').click();assert.equal(await page.locator('#speaker').textContent(),'역무원 · 여울');
+  await page.locator('#next').click();assert.equal(await page.locator('#speaker').textContent(),'여울');
   assert.notEqual(await page.locator('#portrait').evaluate(canvas=>canvas.toDataURL()),playerPortrait);
   const historyCount=await page.evaluate(()=>window.__check.state.history.length);
   await page.locator('#previous').click();assert.equal(await page.locator('#speaker').textContent(),'당신 · 주인공');
@@ -35,9 +37,10 @@ const fs=require('node:fs');
   await page.screenshot({path:'screenshot-speaker-mobile.png',fullPage:true});await page.keyboard.press('Escape');
   // A later real scene used to put On's question under Baekji's portrait.
   await page.setViewportSize({width:1440,height:1000});
-  await page.evaluate(()=>{const t=window.__check;t.state.chapter=5;t.move(0,348,177);t.interact();});
-  await page.locator('#next').click();assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공');
-  assert((await page.locator('.dialogue-turn').textContent()).includes('나루의 편지도'));
+  await page.evaluate(()=>{const t=window.__check;t.state.chapter=6;t.state.homecoming.steps.six=4;t.move(10,348,233);t.interact();});
+  for(let i=0;i<12&&(await page.locator('#speaker').textContent())!=='온 · 주인공';i++)await page.locator('#next').click();
+  assert.equal(await page.locator('#speaker').textContent(),'온 · 주인공');
+  assert((await page.locator('.dialogue-turn').textContent()).includes('아빠'));
   assert.equal(await page.locator('#portrait').evaluate(canvas=>canvas.toDataURL()),playerPortrait);
   await page.screenshot({path:'screenshot-speaker-desktop.png'});await page.keyboard.press('Escape');
   // Speaker-looking words in prose, unknown field names, and HTML are text.

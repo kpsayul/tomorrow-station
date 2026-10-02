@@ -12,7 +12,9 @@ const SAVE='tomorrow-station-v1';
  await page.locator('#load-button').click();
  assert.equal(await page.locator('#save-slots button:disabled').count(),4);
  await page.keyboard.press('Escape');assert.equal(await page.locator('#save-menu').isVisible(),false);
- await page.locator('#begin').click();
+ // Start from a pre-intro save to exercise compatibility and untouched movement.
+ await page.evaluate(key=>localStorage.setItem(key,JSON.stringify({x:240,y:224,room:0})),SAVE);
+ await page.reload();await page.locator('#continue').click();
  const snapshot=()=>page.evaluate(()=>structuredClone(window.__check.state));
  const position=()=>page.evaluate(()=>({x:window.__check.state.x,y:window.__check.state.y}));
  const resetPosition=()=>page.evaluate(()=>{window.__check.state.x=180;window.__check.state.y=243;});

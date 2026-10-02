@@ -14,7 +14,7 @@ const legacy={x:240,y:235,room:5,chapter:3,met:true,ticket:true,cat:true,bell:tr
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},roomEntities,currentTask,closest,allowed,interact,advance,traceLight:fourthDay.traceLight,get dialogue(){return conversation}};requestAnimationFrame(frame);window.addEventListener')}));
    const get=()=>page.evaluate(()=>structuredClone(window.__check.state));
-   async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<40){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
+   async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<300){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
    async function approach(id){await page.evaluate(id=>{
     const t=window.__check,e=t.roomEntities().find(e=>e.id===id);if(!e)throw new Error('Missing entity '+id);
     const points=[];for(let x=e.x-e.radius;x<=e.x+e.radius;x+=2)for(let y=e.y-e.radius;y<=e.y+e.radius;y+=2){const distance=Math.hypot(x-e.x,y-e.y);if(distance<e.radius&&t.allowed(x,y))points.push({x,y,distance});}
@@ -40,7 +40,7 @@ const legacy={x:240,y:235,room:5,chapter:3,met:true,ticket:true,cat:true,bell:tr
    await visit('cafe-menu');await visit('cafe-back');await visit('lighthouse-door');assert.equal((await get()).room,8);
    await visit('mirror-0');assert.deepEqual((await get()).day4.mirrors,[0,0,1]);await visit('photo-light');assert(!(await get()).day4.photos.includes('light'));
    await approach('naru');await page.keyboard.press('e');const meeting=await page.evaluate(()=>window.__check.dialogue.lines.join('\n'));
-   assert(meeting.includes(variant.bell==='hang'?'네가 돌아올 문':'아직 갖고 있었네'));assert(meeting.includes(variant.name==='name'?'온도 좀 도와줄래':'친구도 좀 도와줄래'));await read();assert((await get()).day4.met);
+   assert(meeting.includes(variant.bell==='hang'?'네가 돌아올 문':'아직 갖고 있었네'));assert(meeting.includes(variant.name==='name'?'온, 반사판 좀 맞춰줄래':'친구, 반사판 좀 맞춰줄래'));await read();assert((await get()).day4.met);
    // Every mirror combination is traced, including the three different wrong exits.
    const paths=await page.evaluate(()=>{const t=window.__check,original=t.state.day4.mirrors,result=[];for(let n=0;n<8;n++){t.state.day4.mirrors=[(n>>2)&1,(n>>1)&1,n&1];result.push({mirrors:t.state.day4.mirrors,trace:t.traceLight()});}t.state.day4.mirrors=original;return result;});
    assert.deepEqual(paths.filter(p=>p.trace.solved).map(p=>p.mirrors),[[1,1,0]]);assert(paths.every(p=>p.trace.segments.length>0&&p.trace.segments.length<=4));

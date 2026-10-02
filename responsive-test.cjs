@@ -27,7 +27,7 @@ const assert=require('node:assert/strict');
   if(size.width===1440||size.width===390||size.width===844){await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`screenshot-responsive-${size.width}.png`});}
  }
  // Long choice dialogue remains usable through a live resize.
- await page.evaluate(()=>window.__layout.speak('역무원 · 여울',['다시 찾아가도 괜찮아요. 오늘 전부 찾지 않아도 되고요.\n편지를 가져가시겠어요?'],null,[{text:'온. 내 이름을 돌려받을래요.',action:()=>{}},{text:'이름은 조금 더 맡길게요. 편지는 가져갈래요.',action:()=>{}}]));
+ await page.evaluate(()=>window.__layout.speak('역무원 · 여울',['다시 찾아가도 괜찮아요. 오늘 전부 찾지 않아도 되고요.\n편지를 가져가시겠어요?'],null,[{text:'온. 이름을 돌려받을래요.',action:()=>{}},{text:'이름은 두고, 편지만 가져갈게요.',action:()=>{}}]));
  for(const size of [{width:1440,height:900},{width:390,height:844},{width:320,height:568},{width:844,height:390}]){
   await page.setViewportSize(size);
   const info=await page.evaluate(()=>{const d=document.getElementById('dialogue'),c=document.getElementById('game').getBoundingClientRect(),r=d.getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,top:r.top,bottom:c.bottom,line:getComputedStyle(document.getElementById('line')).fontSize,text:document.getElementById('line').textContent};});

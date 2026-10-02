@@ -75,6 +75,11 @@ h1 span { display: block; font: 9px 'Noto Sans KR', sans-serif; letter-spacing: 
 #portrait { width: 40px; height: 40px; image-rendering: pixelated; flex-shrink: 0; border: 1px solid #829e8a; border-radius: 3px; }
 .dialogue-head { align-items: center; gap: 10px; }
 #speaker { flex: 1; }
+#speaker[data-chapter]::before { content: attr(data-chapter); display: block; margin-bottom: 3px; font-size: 11px; line-height: 1.35; color: #aabebd; font-weight: 400; }
+.dialogue-thought { color: #e2e5d6; }
+.book-chapter-picker { display: grid; gap: 6px; color: #bfcec6; font-size: 13px; }
+.book-chapter-picker select { width: 100%; min-height: 48px; padding: 10px 12px; font: inherit; color: #eaf0e3; background: #233843; border: 1px solid #7f998b; border-radius: 6px; }
+.book-chapter-title { margin: 28px 0 18px; font-size: 18px; color: #d5e3c6; }
 .dialogue-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 #previous { min-height: 44px; padding-left: 0; font-size: 12px; }
 #page { font-size: 12px; color: #bbccc8; white-space: nowrap; }

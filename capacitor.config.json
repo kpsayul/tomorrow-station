@@ -1,0 +1,13 @@
+{
+  "appId": "io.github.kpsayul.tomorrowstation",
+  "appName": "내일 분실물 보관소",
+  "webDir": "dist-mobile",
+  "backgroundColor": "#101925",
+  "android": {
+    "backgroundColor": "#101925",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SystemBars": { "style": "DARK", "hidden": true, "initialViewportFitValueHint": "cover" }
+  }
+}

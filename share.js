@@ -12,23 +12,23 @@ window.createGameSharing=function(api){
   const text=(value,x,y,size,color='#edf0e5',weight=500)=>{ctx.fillStyle=color;ctx.font=`${weight} ${size}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;ctx.fillText(value,x,y);};
   text('NIGHT PLATFORM',64,91,18,'#c5dfb9',700);
   text('내일 분실물',60,193,60,'#f1efdf',700);text('보관소',60,269,60,'#f1efdf',700);
-  const lines=s.journey2?.eight.ended?(s.journey2.eight.policy==='local'?['나는 열일곱 역에','다시 정할 권한을 나누었다.']:['나는 서로 확인하며','다시 출발하기로 했다.']):s.chapter>=6?['지도에서 지워진 도시에도','기다리는 사람이 있었다.']:s.ended?(s.choice==='carry'?['나는 기다리던 마음과 함께','한 걸음 나아가기로 했다.']:['나는 누군가 돌아올','자리를 남겼다.']):['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.'];
+  const lines=s.journey2?.eight.ended?['오늘 재미있었던 일을','말할 사람이 있었다.']:s.chapter>=5?['돌려받은 기억을 가지고','집으로 가는 길.']:s.ended?(s.choice==='carry'?['나는 기다리던 마음과 함께','한 걸음 나아가기로 했다.']:['나는 누군가 돌아올','자리를 남겼다.']):['이름을 잃어버린 당신이,','다른 사람들의 분실물을 찾는 밤.'];
   text(lines[0],64,354,30);text(lines[1],64,400,30);text(s.ended?'너라면 어떤 선택을 할까?':'여덟 이야기 · 열일곱 공간 · 당신의 선택',64,459,22,'#bdcfc6');
   fill(64,509,270,49,'#c5dfb9');text('무료 · 설치 없이 바로 플레이',79,541,18,'#24352f',700);
   text('kpsayul.github.io/tomorrow-station',64,586,18,'#aabebb');
   message=s.ended?lines.join(' ')+' 너라면 어떤 선택을 할까?':pitch;
   canvas.setAttribute('aria-label',message+' 내일 분실물 보관소');$('share-message').textContent=message;
  }
- function open(){api.keys.clear();drawCard();$('share-link').value=link;$('share-status').textContent='카드를 저장하거나 플레이 링크를 친구에게 보내보세요.';$('native-share').hidden=typeof navigator.share!=='function';$('share-menu').showModal();}
+ function open(){api.keys.clear();drawCard();$('share-link').value=link;$('share-status').textContent='카드를 저장하거나 플레이 링크를 친구에게 보내보세요.';$('native-share').hidden=!window.tomorrowNative&&typeof navigator.share!=='function';$('share-menu').showModal();}
  $('share-game').onclick=$('share-ending').onclick=open;
  $('copy-share-link').onclick=async()=>{
-  try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');await navigator.clipboard.writeText(link);$('share-status').textContent='플레이 링크를 복사했어요.';window.tomorrowMetrics?.track('share',{method:'copy_link'});}
+  try{if(window.tomorrowNative)await window.tomorrowNative.copy(link);else{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');await navigator.clipboard.writeText(link);}$('share-status').textContent='플레이 링크를 복사했어요.';window.tomorrowMetrics?.track('share',{method:'copy_link'});}
   catch{$('share-link').focus();$('share-link').select();$('share-status').textContent='자동 복사가 안 되어 링크를 선택했어요. 길게 누르거나 Ctrl/Cmd+C로 복사해주세요.';}
  };
- $('native-share').onclick=async()=>{try{await navigator.share({title:'내일 분실물 보관소',text:message,url:link});$('share-status').textContent='공유 창을 열었어요.';window.tomorrowMetrics?.track('share',{method:'native'});}catch(error){if(error.name!=='AbortError')$('share-status').textContent='공유 창을 열지 못했어요. 링크 복사를 이용해주세요.';}};
+ $('native-share').onclick=async()=>{try{const data={title:'내일 분실물 보관소',text:message,url:link};if(window.tomorrowNative)await window.tomorrowNative.share(data);else await navigator.share(data);$('share-status').textContent='공유 창을 열었어요.';window.tomorrowMetrics?.track('share',{method:'native'});}catch(error){if(error.name!=='AbortError')$('share-status').textContent='공유 창을 닫았거나 열지 못했어요. 링크 복사도 이용할 수 있어요.';}};
  $('download-share-card').onclick=()=>{
   const button=$('download-share-card');button.disabled=true;
-  try{$('share-card').toBlob(blob=>{button.disabled=false;if(!blob){$('share-status').textContent='이미지를 만들지 못했어요. 링크 복사를 이용해주세요.';return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='tomorrow-station-my-story.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('share-status').textContent='결과 카드를 저장했어요. 이미지와 플레이 링크를 함께 보내주세요.';window.tomorrowMetrics?.track('share',{method:'download_card'});},'image/png');}
+  try{$('share-card').toBlob(async blob=>{if(!blob){button.disabled=false;$('share-status').textContent='이미지를 만들지 못했어요. 링크 복사를 이용해주세요.';return;}try{if(window.tomorrowNative){const saved=await window.tomorrowNative.saveFile(blob,'tomorrow-station-my-story.png');$('share-status').textContent=saved?'선택한 위치에 결과 카드를 저장했어요.':'카드 저장을 취소했어요.';return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='tomorrow-station-my-story.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('share-status').textContent='결과 카드를 저장했어요. 이미지와 플레이 링크를 함께 보내주세요.';window.tomorrowMetrics?.track('share',{method:'download_card'});}catch{$('share-status').textContent='이미지를 저장하지 못했어요. 다시 시도해주세요.';}finally{button.disabled=false;}},'image/png');}
   catch{button.disabled=false;$('share-status').textContent='이미지 저장을 지원하지 않아요. 링크 복사를 이용해주세요.';}
  };
  $('close-share').onclick=()=>$('share-menu').close();$('share-menu').addEventListener('close',()=>{api.keys.clear();api.canvas.focus({preventScroll:true});});

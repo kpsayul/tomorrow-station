@@ -11,7 +11,7 @@ const legacy={x:348,y:177,room:0,met:true,ticket:true,cat:true,bell:true,choice:
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},roomEntities,currentTask,allowed,interact,advance,move,get dialogue(){return conversation}};requestAnimationFrame(frame);window.addEventListener')}));
  const get=()=>page.evaluate(()=>structuredClone(window.__check.state));
- async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<30){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
+ async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<300){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
  async function approach(x,y){await page.evaluate(({x,y})=>{window.__check.state.x=x;window.__check.state.y=y;},{x,y});await page.waitForFunction(()=>!document.getElementById('interaction').hidden);}
  async function visit(x,y){await approach(x,y);await page.keyboard.press('e');await read();}
  async function pick(label){await page.getByRole('button',{name:label,exact:true}).click();await read();}
@@ -39,12 +39,12 @@ const legacy={x:348,y:177,room:0,met:true,ticket:true,cat:true,bell:true,choice:
  await visit(240,257);assert.equal((await get()).room,0);
  await visit(240,253);assert.equal((await get()).room,1);
  await visit(348,186);assert((await get()).night2.catName);
- await visit(240,253);await visit(348,177);await pick('온. 내 이름을 돌려받을래요.');
+ await visit(240,253);await visit(348,177);await pick('온. 이름을 돌려받을래요.');
  assert((await get()).night2.ended);assert.equal(await page.locator('#end-title').textContent(),'나를 데리러 온 나');assert.equal(await page.locator('#end-next-night').isVisible(),true);assert.equal(await page.locator('#end-next-night').textContent(),'세 번째 밤 시작 →');
  await page.reload();await page.locator('#continue').click();assert((await get()).night2.ended);
  await visit(348,177);assert.equal(await page.locator('#ending').isVisible(),false);
  await page.evaluate(()=>{window.__check.state.night2.ended=false;});
- await visit(348,177);await pick('이름은 조금 더 맡길게요. 편지는 가져갈래요.');assert.equal(await page.locator('#end-title').textContent(),'빈칸도 내 자리');
+ await visit(348,177);await pick('지금은 편지만 가져갈게요.');assert.equal(await page.locator('#end-title').textContent(),'빈칸도 내 자리');
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'screenshot-ending-mobile.png'});await page.locator('#return').click();
  // The other first-night choice changes the new opening dialogue.

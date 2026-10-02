@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">내일 분실물 보관소</string>
+    <string name="title_activity_main">내일 분실물 보관소</string>
+    <string name="package_name">io.github.kpsayul.tomorrowstation</string>
+    <string name="custom_url_scheme">io.github.kpsayul.tomorrowstation</string>
+</resources>

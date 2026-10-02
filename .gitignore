@@ -14,3 +14,21 @@ playwright-report/
 !.env.example
 .DS_Store
 Thumbs.db
+
+# Generated Android assets, local SDK configuration and signing material
+dist-mobile/
+artifacts/
+android/.gradle/
+android/.idea/
+android/**/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor-cordova-android-plugins/
+*.jks
+*.keystore
+*.p12
+*.pfx
+upload-password.clixml
+keystore.properties

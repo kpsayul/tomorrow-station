@@ -10,15 +10,17 @@ const fs=require('node:fs');
   const state=()=>page.evaluate(()=>structuredClone(window.__check.state));
   async function visit(room,x,y){await page.evaluate(({room,x,y})=>{const t=window.__check;t.move(room,x,y);t.interact();},{room,x,y});}
   async function read(){await page.evaluate(()=>{const t=window.__check;let guard=0;while(t.dialogue&&guard++<80){const d=t.dialogue;for(const p of d.pages){if(new Set((p.turns||[]).filter(t=>!t.narration).map(t=>t.speaker)).size>1)throw Error('Mixed speaker page');}if(d.choices&&d.index===d.lines.length-1)return;t.advance();}if(t.dialogue)throw Error('Dialogue did not finish');});}
-  const choice=question==='again'?'방금 “이번에도”라고 했죠?':'제 이름도 알고 있나요?';
-  await page.goto(process.env.GAME_URL||'http://localhost:8080/tomorrow-station/');await page.locator('#begin').click();
-  await visit(0,348,177);assert.equal(await page.locator('#choices button').count(),2);assert.equal(await page.locator('#page').textContent(),'1 / 1');
+  const choice=question==='again'?'무슨 방울인데요?':'제 이름도 찾을 수 있어요?';
+  await page.goto(process.env.GAME_URL||'http://localhost:8080/tomorrow-station/');
+  await page.evaluate(()=>localStorage.setItem('tomorrow-station-v1',JSON.stringify({x:240,y:224,room:0})));
+  await page.reload();await page.locator('#continue').click();
+  await visit(0,348,177);assert(await page.evaluate(()=>window.__check.dialogue.pages.length<=3));await read();assert.equal(await page.locator('#choices button').count(),2);
   await page.getByRole('button',{name:choice,exact:true}).click();await page.keyboard.press('Escape');
   assert.equal((await state()).met,false);assert.equal((await state()).firstQuestion,null);
-  await visit(0,348,177);await page.getByRole('button',{name:choice,exact:true}).click();await read();
+  await visit(0,348,177);await read();await page.getByRole('button',{name:choice,exact:true}).click();assert((await page.evaluate(()=>window.__check.dialogue.lines.join('\n'))).includes(question==='name'?'접수 기록':'동생 가방'));await read();
   assert((await state()).met);assert.equal((await state()).firstQuestion,question);
   await page.reload();await page.locator('#continue').click();assert.equal((await state()).firstQuestion,question);
-  await visit(0,91,167);assert((await page.evaluate(()=>window.__check.dialogue.lines.join('\n'))).includes(question==='name'?'이름도 맡기셨네요':'이미 직원이셔서'));await read();assert((await state()).ticket);
+  await visit(0,91,167);assert((await page.evaluate(()=>window.__check.dialogue.lines.join('\n'))).includes('인수자: 여울'));await read();assert((await state()).ticket);
   assert.equal(await page.evaluate(()=>window.__check.normaliseSave({...window.__check.state,firstQuestion:'invalid'}).firstQuestion),null);
   // Each necessary sound clue should reward exploration after at most two pages.
   await page.evaluate(()=>{const s=window.__check.state;s.chapter=2;s.night2.met=true;});
@@ -33,6 +35,6 @@ const fs=require('node:fs');
   assert.equal((await state()).day4.reunited,false);await page.keyboard.press('Escape');assert.equal((await state()).day4.choice,null);
   await visit(8,403,241);await read();await page.getByRole('button',{name:question==='again'?'식탁에 한 자리 더 만들자.':'둘이 먼저 바다를 걸어봐.',exact:true}).click();await read();assert((await state()).day4.reunited);
   assert.equal((await state()).day4.choice,question==='again'?'table':'shore');assert.deepEqual(errors,[]);
-  console.log(`PASS: ${question}; immediate question, cancel/retry, saved branch consequence, bounded clue/reunion reading, payoff after choice, one speaker per page.`);await context.close();
+  console.log(`PASS: ${question}; short opening, cancel/retry, saved branch consequence, bounded clue/reunion reading, payoff after choice, one speaker per page.`);await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

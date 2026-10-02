@@ -14,7 +14,7 @@ const legacy={x:348,y:177,room:0,chapter:2,met:true,ticket:true,cat:true,bell:tr
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('game.js','utf8').replace('requestAnimationFrame(frame);window.addEventListener','window.__check={get state(){return state},roomEntities,currentTask,closest,allowed,interact,advance,get dialogue(){return conversation}};requestAnimationFrame(frame);window.addEventListener')}));
    const get=()=>page.evaluate(()=>structuredClone(window.__check.state));
-   async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<40){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
+   async function read(){await page.evaluate(()=>{let guard=0;while(window.__check.dialogue&&guard++<300){const d=window.__check.dialogue;if(d.choices&&d.index===d.lines.length-1)break;window.__check.advance();}});}
    async function approach(id){
     await page.evaluate(id=>{
      const t=window.__check,e=t.roomEntities().find(e=>e.id===id);if(!e)throw new Error('Missing entity '+id);

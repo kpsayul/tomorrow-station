@@ -1,0 +1,30 @@
+{
+  "name": "tomorrow-station",
+  "version": "1.0.0",
+  "private": true,
+  "description": "내일 분실물 보관소 Android app and web game",
+  "scripts": {
+    "mobile:build": "node mobile/build.mjs",
+    "android:sync": "npm run mobile:build && cap sync android",
+    "android:open": "cap open android",
+    "android:run": "npm run android:sync && cap run android",
+    "test:mobile": "node --test mobile/build.test.mjs",
+    "story:build": "node story/build-homecoming.mjs",
+    "test:story": "node homecoming-test.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/clipboard": "8.0.1",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/share": "8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "esbuild": "0.28.2",
+    "playwright": "1.63.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
